@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from sqlalchemy import String, Text, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import Mapped, mapped_column
 from app.infrastructure.db.session import Base
@@ -17,7 +17,7 @@ class ItemModel(Base):
     status: Mapped[ItemStatus] = mapped_column(
         Enum(ItemStatus), default=ItemStatus.LOST
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
     
     #ForeignKey
     reporter_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
