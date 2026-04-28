@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+pycache/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+env/
+ENV/
+
+# FastAPI specific
+.env
+.env.local
+
+# anuan
+requirement.md
