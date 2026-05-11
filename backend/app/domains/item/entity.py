@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import date
+from datetime import datetime
 from enum import Enum
 
 class ItemStatus(str, Enum):
@@ -8,17 +8,24 @@ class ItemStatus(str, Enum):
     CLAIMED = "claimed"
 
 
+class ReportType(str, Enum):
+    LOST = "lost"
+    FOUND = "found"
+
+
 @dataclass
 class ItemEntity:
     id: int | None
     title: str
     description: str
     location: str
+    image: str | None
     latitude: float | None
     longitude: float | None
+    report_type: ReportType
     status: ItemStatus
     reporter_id: int
-    created_at: date
+    created_at: datetime
 
     #contoh untuk ubah status dari found -> claimed
     def mark_as_claimed(self):

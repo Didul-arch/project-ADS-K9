@@ -37,6 +37,7 @@ Thumbs.db
 # Environment
 .env
 .env.local
+.venv
 
 # Development notes (gitignore)
 dev_*.md
@@ -46,6 +47,7 @@ DEV_*.md
 *.db
 *.sqlite
 *.sqlite3
+alembic.ini
 
 # Logs
 *.log
