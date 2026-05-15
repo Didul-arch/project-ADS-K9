@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import SidebarUser from "./components/SidebarUser";
+import Header from "./components/Header";
 
 import Browse from "./pages/Browse";
 import Claims from "./pages/Claims";
@@ -9,9 +10,12 @@ import Report from "./pages/Report";
 
 const MainLayout = ({ children }) => {
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen ">
       <SidebarUser />
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main className="flex-1 overflow-y-auto flex flex-col">
+        <Header />
+        {children}
+      </main>
     </div>
   );
 };
