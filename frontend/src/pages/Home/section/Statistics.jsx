@@ -44,7 +44,7 @@ export default function Statistics() {
         return (
           <div
             key={index}
-            className={`w-[175px] h-[180px] ${stat.bgColor} rounded-lg border border-gray-200 p-4 flex flex-col justify-between`}
+            className={`w-43.75 h-45 ${stat.bgColor} rounded-lg border border-gray-200 p-4 flex flex-col justify-between`}
           >
             {/* Top Section - Icon & Title */}
             <div className="flex flex-col gap-3">

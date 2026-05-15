@@ -37,10 +37,10 @@ export default function RecentReport() {
         return (
           <div
             key={index}
-            className="w-[233px] h-[310px] rounded-lg border border-gray-300 overflow-hidden bg-white hover:shadow-lg transition-shadow"
+            className="w-58.25 h-77.5 rounded-lg border border-gray-300 overflow-hidden bg-white hover:shadow-lg transition-shadow"
           >
             {/* Image Container */}
-            <div className="relative w-full h-[160px] bg-gray-200">
+            <div className="relative w-full h-40 bg-gray-200">
               <img
                 src={item.image}
                 alt={item.name}
@@ -57,7 +57,7 @@ export default function RecentReport() {
             </div>
 
             {/* Content Container */}
-            <div className="p-4 flex flex-col gap-3 justify-between h-[120px]">
+            <div className="p-4 flex flex-col gap-3 justify-between h-30">
               <div>
                 <h3 className="text-base font-bold text-gray-900 mb-3">
                   {item.name}
@@ -67,7 +67,7 @@ export default function RecentReport() {
                 <div className="flex items-center gap-2 mb-2">
                   <SlLocationPin
                     size={16}
-                    className="text-gray-500 flex-shrink-0"
+                    className="text-gray-500 shrink-0"
                   />
                   <p className="text-sm text-gray-600">{item.location}</p>
                 </div>
