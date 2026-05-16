@@ -10,7 +10,7 @@ import Report from "./pages/Report";
 
 const MainLayout = ({ children }) => {
   return (
-    <div className="flex min-h-screen ">
+    <div className="flex min-h-screen bg-[#FAF8FF]">
       <SidebarUser />
       <main className="flex-1 overflow-y-auto flex flex-col">
         <Header />

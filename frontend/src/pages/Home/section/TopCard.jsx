@@ -6,7 +6,7 @@ export default function TopCard() {
   return (
     <div className="flex gap-6">
       {/* Report Lost Item */}
-      <div className="w-90.55 h-65.5 bg-white rounded-lg border border-gray-200 p-8 hover:shadow-lg transition-shadow ">
+      <div className="w-90.5 h-65.5 bg-white rounded-lg border border-gray-200 p-8 hover:shadow-lg transition-shadow ">
         <div className="flex flex-col items-start gap-4">
           {/* Icon */}
           <div className="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center">
