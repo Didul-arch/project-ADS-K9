@@ -3,6 +3,8 @@ import { Home, Search, PlusCircle, Layout, Clock, LogOut } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 
+import ipbLogo from '../assets/ipb-logo.png';
+
 const Sidebar = () => {
   const { t } = useLanguage();
   const { user, logout } = useAuth();
@@ -43,20 +45,16 @@ const Sidebar = () => {
       padding: '30px 20px',
       zIndex: 100,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '50px', paddingLeft: '10px' }}>
-        <div style={{
-          width: '40px',
-          height: '40px',
-          background: 'var(--ipb-blue)',
-          borderRadius: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'var(--ipb-gold)',
-          fontWeight: 'bold',
-          fontSize: '20px'
-        }}>I</div>
-        <h2 style={{ fontSize: '20px', color: 'var(--text-primary)' }}>LnF IPB</h2>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '40px', padding: '0 5px' }}>
+        <img 
+          src={ipbLogo} 
+          alt="IPB University" 
+          style={{ 
+            width: '100%', 
+            maxHeight: '45px', 
+            objectFit: 'contain' 
+          }} 
+        />
       </div>
 
       <nav style={{ flex: 1 }}>

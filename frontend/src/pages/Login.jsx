@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, Languages } from 'lucide-react';
+import ipbLogoWhite from '../assets/ipb-logo-white.png';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -186,21 +187,35 @@ const Login = () => {
         overflow: 'hidden'
       }}>
         <div style={{ 
-          width: '280px', 
-          height: '280px', 
           background: 'rgba(255, 255, 255, 0.1)', 
           backdropFilter: 'blur(30px)',
-          borderRadius: '50%',
+          borderRadius: '30px',
+          padding: '40px 30px',
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           border: '1px solid rgba(255, 255, 255, 0.2)',
-          marginBottom: '40px'
+          width: '80%',
+          maxWidth: '420px',
+          marginBottom: '30px',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)'
         }}>
-          <div style={{ fontSize: '120px', fontWeight: 'bold' }}>I</div>
+          <img 
+            src={ipbLogoWhite} 
+            alt="IPB University" 
+            style={{ 
+              width: '100%', 
+              maxHeight: '75px', 
+              objectFit: 'contain',
+              marginBottom: '20px'
+            }} 
+          />
+          <h2 style={{ fontSize: '22px', fontWeight: '800', color: 'white', letterSpacing: '2px', textTransform: 'uppercase', margin: 0 }}>
+            Lost & Found
+          </h2>
         </div>
-        <h1 style={{ fontSize: '48px', color: 'white', letterSpacing: '4px' }}>LnF IPB</h1>
-        <p style={{ marginTop: '20px', color: 'rgba(255, 255, 255, 0.8)', maxWidth: '400px', textAlign: 'center' }}>
+        <p style={{ marginTop: '10px', color: 'rgba(255, 255, 255, 0.9)', maxWidth: '400px', textAlign: 'center', fontSize: '15px', lineHeight: '1.6' }}>
           {t('authTagline')}
         </p>
       </div>

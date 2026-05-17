@@ -416,68 +416,6 @@ const Navbar = ({ title }) => {
 
                 <hr style={{ border: 'none', borderTop: '1px solid #E0E5F2', margin: 0 }} />
 
-                {/* Switch Role Feature */}
-                {user && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                      {t('switchRole')}
-                    </span>
-                    <div style={{
-                      display: 'flex',
-                      background: 'var(--bg-primary)',
-                      padding: '4px',
-                      borderRadius: '10px',
-                      gap: '4px'
-                    }}>
-                      <button 
-                        onClick={() => {
-                          switchRole('User');
-                          setShowProfile(false);
-                        }}
-                        style={{
-                          flex: 1,
-                          padding: '6px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '11px',
-                          fontWeight: 'bold',
-                          background: user.role !== 'Admin' ? 'white' : 'transparent',
-                          color: user.role !== 'Admin' ? 'var(--ipb-blue)' : 'var(--text-secondary)',
-                          boxShadow: user.role !== 'Admin' ? '0px 2px 6px rgba(112, 144, 176, 0.1)' : 'none',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        User
-                      </button>
-                      <button 
-                        onClick={() => {
-                          switchRole('Admin');
-                          setShowProfile(false);
-                          navigate('/dashboard');
-                        }}
-                        style={{
-                          flex: 1,
-                          padding: '6px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontSize: '11px',
-                          fontWeight: 'bold',
-                          background: user.role === 'Admin' ? 'white' : 'transparent',
-                          color: user.role === 'Admin' ? 'var(--ipb-blue)' : 'var(--text-secondary)',
-                          boxShadow: user.role === 'Admin' ? '0px 2px 6px rgba(112, 144, 176, 0.1)' : 'none',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        Admin
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <hr style={{ border: 'none', borderTop: '1px solid #E0E5F2', margin: 0 }} />
-
                 {/* Logout Button */}
                 <button 
                   onClick={() => {
