@@ -6,9 +6,11 @@ import { motion } from 'framer-motion';
 import { Search, PlusCircle, ArrowRight, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const recentItems = items.slice(0, 3);
 
   return (
@@ -44,10 +46,17 @@ const Home = () => {
               <PlusCircle size={20} />
               {t('reportItem')}
             </Link>
-            <Link to="/signup" className="btn" style={{ background: 'var(--ipb-gold)', color: 'var(--ipb-blue)', padding: '16px 32px' }}>
-              <User size={20} />
-              Sign Up
-            </Link>
+            {!user ? (
+              <Link to="/signup" className="btn" style={{ background: 'var(--ipb-gold)', color: 'var(--ipb-blue)', padding: '16px 32px' }}>
+                <User size={20} />
+                Sign Up
+              </Link>
+            ) : (
+              <Link to="/dashboard" className="btn" style={{ background: 'var(--ipb-gold)', color: 'var(--ipb-blue)', padding: '16px 32px' }}>
+                <ArrowRight size={20} />
+                Dashboard
+              </Link>
+            )}
           </div>
         </div>
 

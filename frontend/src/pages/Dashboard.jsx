@@ -15,6 +15,11 @@ const Dashboard = () => {
   const isAdmin = user?.role === 'Admin';
   const recentItems = items.slice(0, 3);
 
+  // Capitalize the first letter of user's name dynamically for high visual polish
+  const userName = user?.name 
+    ? user.name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+    : 'User';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -48,7 +53,7 @@ const Dashboard = () => {
                <AlertCircle size={40} />
             </div>
             <div>
-              <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>System Overview</h1>
+              <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>{t('welcomeBack')}, {userName}! 👋</h1>
               <p>There are <strong>12 pending claims</strong> that require your immediate verification.</p>
             </div>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px' }}>
@@ -93,7 +98,7 @@ const Dashboard = () => {
                <CheckCircle size={40} />
             </div>
             <div>
-              <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>{t('welcomeBack')}, Budi! 👋</h1>
+              <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>{t('welcomeBack')}, {userName}! 👋</h1>
               <p>{t('activeReportsMsg', { count: 2, notif: 1 })}</p>
             </div>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px' }}>

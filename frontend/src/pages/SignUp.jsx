@@ -3,21 +3,37 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { motion } from 'framer-motion';
-import { User, Mail, Lock, Eye, EyeOff, Languages } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, Languages, Phone } from 'lucide-react';
 import ipbLogoWhite from '../assets/ipb-logo-white.png';
 
 const SignUp = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
   const { signUp } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (signUp(name, email, password)) {
+    
+    // Clear previous error
+    setErrorMsg('');
+
+    // Password matching validation
+    if (password !== confirmPassword) {
+      setErrorMsg(t('passwordMismatch'));
+      return;
+    }
+
+    if (signUp(name, email, password, phone)) {
       navigate('/dashboard');
     }
   };
@@ -64,18 +80,38 @@ const SignUp = () => {
         flex: '0 0 45%', 
         display: 'flex', 
         flexDirection: 'column', 
-        padding: '40px 60px', 
+        padding: '30px 50px', 
         justifyContent: 'center',
         height: '100%',
         overflowY: 'auto',
         minHeight: 0
       }}>
-        <div style={{ marginBottom: '24px' }}>
-          <h1 style={{ fontSize: '36px', marginBottom: '8px' }}>{t('signUp')}</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>{t('signUpDesc')}</p>
+        <div style={{ marginBottom: '20px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '6px', color: 'var(--text-primary)' }}>{t('signUpGeneralTitle')}</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.4' }}>{t('signUpGeneralDesc')}</p>
         </div>
 
+        {/* Error Warning Block */}
+        {errorMsg && (
+          <div style={{
+            background: '#FEE2E2',
+            border: '1px solid #FCA5A5',
+            color: '#991B1B',
+            padding: '12px 16px',
+            borderRadius: '12px',
+            fontSize: '14px',
+            fontWeight: '600',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span>⚠️</span> {errorMsg}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
+          {/* Full Name */}
           <div className="form-group">
             <label style={{ fontSize: '14px' }}>{t('nameLabel')}<span style={{ color: '#4F46E5' }}>*</span></label>
             <input 
@@ -88,18 +124,33 @@ const SignUp = () => {
             />
           </div>
 
+          {/* General Email */}
           <div className="form-group">
             <label style={{ fontSize: '14px' }}>{t('emailLabel')}<span style={{ color: '#4F46E5' }}>*</span></label>
             <input 
               type="email" 
               className="form-input" 
-              placeholder="mail@apps.ipb.ac.id" 
+              placeholder="budi@gmail.com" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required 
             />
           </div>
 
+          {/* WhatsApp / Phone Number */}
+          <div className="form-group">
+            <label style={{ fontSize: '14px' }}>{t('phoneLabel')}<span style={{ color: '#4F46E5' }}>*</span></label>
+            <input 
+              type="tel" 
+              className="form-input" 
+              placeholder={t('phonePlaceholder')}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required 
+            />
+          </div>
+
+          {/* Password */}
           <div className="form-group" style={{ position: 'relative' }}>
             <label style={{ fontSize: '14px' }}>{t('passwordLabel')}<span style={{ color: '#4F46E5' }}>*</span></label>
             <div style={{ position: 'relative' }}>
@@ -121,8 +172,30 @@ const SignUp = () => {
             </div>
           </div>
 
+          {/* Confirm Password */}
+          <div className="form-group" style={{ position: 'relative' }}>
+            <label style={{ fontSize: '14px' }}>{t('confirmPasswordLabel')}<span style={{ color: '#4F46E5' }}>*</span></label>
+            <div style={{ position: 'relative' }}>
+              <input 
+                type={showConfirmPassword ? 'text' : 'password'} 
+                className="form-input" 
+                placeholder={t('confirmPasswordPlaceholder')}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required 
+              />
+              <button 
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+          </div>
+
           <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '16px', fontSize: '16px', marginTop: '12px' }}>
-            {t('signUp')}
+            {t('createAccount')}
           </button>
         </form>
 

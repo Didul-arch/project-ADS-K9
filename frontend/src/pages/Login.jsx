@@ -7,24 +7,38 @@ import { Mail, Lock, Eye, EyeOff, Languages } from 'lucide-react';
 import ipbLogoWhite from '../assets/ipb-logo-white.png';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('User'); // New role state
+  // Prefill with Luqman's credentials by default for perfect developer experience
+  const [email, setEmail] = useState('luqman@apps.ipb.ac.id');
+  const [password, setPassword] = useState('luqman123');
+  const [role, setRole] = useState('User'); // Toggle state for simulation
   const [showPassword, setShowPassword] = useState(false);
-  const { login, loginWithGoogle } = useAuth();
+  const [errorMsg, setErrorMsg] = useState('');
+  
+  const { login } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (login(email, password, role)) {
+    setErrorMsg('');
+    
+    // Call our refined simulated login with real password matching
+    if (login(email, password)) {
       navigate('/dashboard');
+    } else {
+      setErrorMsg(t('invalidCredentials'));
     }
   };
 
-  const handleGoogleLogin = () => {
-    if (loginWithGoogle(role)) {
-      navigate('/dashboard');
+  const handleRoleToggle = (selectedRole) => {
+    setRole(selectedRole);
+    setErrorMsg('');
+    if (selectedRole === 'User') {
+      setEmail('luqman@apps.ipb.ac.id');
+      setPassword('luqman123');
+    } else {
+      setEmail('syafiq@apps.ipb.ac.id');
+      setPassword('syafiq123');
     }
   };
 
@@ -81,31 +95,31 @@ const Login = () => {
           <p style={{ color: 'var(--text-secondary)' }}>{t('signInDesc')}</p>
         </div>
 
-        <button 
-          onClick={handleGoogleLogin}
-          className="btn" 
-          style={{ 
-            width: '100%', 
-            background: '#F4F7FE', 
-            color: 'var(--text-primary)', 
-            marginBottom: '24px',
-            gap: '12px'
-          }}
-        >
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20" />
-          {t('googleSignIn')}
-        </button>
+        {/* Beautiful Warning Alert Block on Failed Authentication */}
+        {errorMsg && (
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.08)',
+            border: '1px solid rgba(239, 68, 68, 0.25)',
+            borderRadius: '12px',
+            padding: '12px 16px',
+            color: '#EF4444',
+            fontSize: '14px',
+            fontWeight: '600',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span style={{ fontSize: '16px' }}>⚠️</span>
+            {errorMsg}
+          </div>
+        )}
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-          <div style={{ flex: 1, height: '1px', background: '#E0E5F2' }}></div>
-          <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>or</span>
-          <div style={{ flex: 1, height: '1px', background: '#E0E5F2' }}></div>
-        </div>
-
+        {/* Sliding Role Selector to prefill developer credentials */}
         <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', background: '#F4F7FE', padding: '6px', borderRadius: '12px' }}>
           <button 
             type="button"
-            onClick={() => setRole('User')}
+            onClick={() => handleRoleToggle('User')}
             style={{ 
               flex: 1, 
               padding: '10px', 
@@ -115,14 +129,15 @@ const Login = () => {
               boxShadow: role === 'User' ? '0px 4px 10px rgba(0,0,0,0.05)' : 'none',
               fontWeight: '600',
               cursor: 'pointer',
-              color: role === 'User' ? 'var(--ipb-blue)' : 'var(--text-secondary)'
+              color: role === 'User' ? 'var(--ipb-blue)' : 'var(--text-secondary)',
+              transition: 'all 0.25s ease'
             }}
           >
             User
           </button>
           <button 
             type="button"
-            onClick={() => setRole('Admin')}
+            onClick={() => handleRoleToggle('Admin')}
             style={{ 
               flex: 1, 
               padding: '10px', 
@@ -132,7 +147,8 @@ const Login = () => {
               boxShadow: role === 'Admin' ? '0px 4px 10px rgba(0,0,0,0.05)' : 'none',
               fontWeight: '600',
               cursor: 'pointer',
-              color: role === 'Admin' ? 'var(--ipb-blue)' : 'var(--text-secondary)'
+              color: role === 'Admin' ? 'var(--ipb-blue)' : 'var(--text-secondary)',
+              transition: 'all 0.25s ease'
             }}
           >
             Admin

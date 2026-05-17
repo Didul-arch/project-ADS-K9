@@ -108,6 +108,14 @@ export const translations = {
     alreadyHaveAccount: "Already have an account?",
     authTagline: "Connecting IPB community to retrieve lost items with ease and security.",
     joinCommunity: "Join the community and help fellow IPB students retrieve their lost belongings.",
+    signUpGeneralTitle: "Register General Account (Non-IPB)",
+    signUpGeneralDesc: "Create an account to report or claim lost items around IPB campus.",
+    phoneLabel: "WhatsApp / Phone Number",
+    phonePlaceholder: "e.g. 0812xxxxxxxx",
+    confirmPasswordLabel: "Confirm Password",
+    confirmPasswordPlaceholder: "Re-enter your password",
+    passwordMismatch: "Passwords do not match!",
+    invalidCredentials: "Invalid email or password!",
     
     // Notifications & Profile additions
     notifications: "Notifications",
@@ -231,6 +239,14 @@ export const translations = {
     alreadyHaveAccount: "Sudah punya akun?",
     authTagline: "Menghubungkan komunitas IPB untuk menemukan barang hilang dengan mudah dan aman.",
     joinCommunity: "Bergabunglah dengan komunitas dan bantu sesama mahasiswa IPB menemukan barang mereka.",
+    signUpGeneralTitle: "Daftar Akun Umum (Non-IPB)",
+    signUpGeneralDesc: "Buat akun untuk melaporkan atau mengklaim barang hilang di sekitar kampus IPB.",
+    phoneLabel: "Nomor WhatsApp / HP",
+    phonePlaceholder: "Contoh: 0812xxxxxxxx",
+    confirmPasswordLabel: "Konfirmasi Kata Sandi",
+    confirmPasswordPlaceholder: "Masukkan ulang kata sandi",
+    passwordMismatch: "Kata sandi tidak cocok!",
+    invalidCredentials: "Email atau kata sandi salah!",
     
     // Notifications & Profile additions
     notifications: "Notifikasi",
