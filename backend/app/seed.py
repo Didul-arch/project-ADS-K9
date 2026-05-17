@@ -4,7 +4,10 @@ from datetime import datetime, timezone
 from app.infrastructure.db.session import AsyncSessionLocal, engine, Base
 from app.infrastructure.db.models.user_model import UserModel
 from app.infrastructure.db.models.item_model import ItemModel
+from app.infrastructure.db.models.claim_model import ClaimModel
 from app.domains.item.entity import ItemStatus, ReportType
+from app.domains.user.entity import Role
+from app.infrastructure.auth.utils import get_password_hash
 
 async def seed_data():
     async with engine.begin() as conn:
@@ -20,11 +23,15 @@ async def seed_data():
                 email="didul@apps.ipb.ac.id",
                 full_name="Syafiq Syadidul Azmi",
                 is_active=True,
+                password_hash=get_password_hash("didul123"),
+                role=Role.CIVITAS,
             )
             user2 = UserModel(
                 email="budi@apps.ipb.ac.id",
                 full_name="Budi Budiman",
                 is_active=True,
+                password_hash=get_password_hash("budi123"),
+                role=Role.CIVITAS,
             )
             session.add_all([user1, user2])
 
