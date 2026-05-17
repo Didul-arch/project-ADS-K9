@@ -29,7 +29,17 @@ const Login = () => {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'white', position: 'fixed', top: 0, left: 0, width: '100%', zIndex: 1000 }}>
+    <div style={{ 
+      display: 'flex', 
+      height: '100vh', 
+      background: 'white', 
+      position: 'fixed', 
+      top: 0, 
+      left: 0, 
+      width: '100%', 
+      zIndex: 1000,
+      overflow: 'hidden'
+    }}>
       {/* Language Switcher */}
       <button 
         onClick={toggleLanguage}
@@ -56,8 +66,17 @@ const Login = () => {
       </button>
 
       {/* Left Column: Form */}
-      <div style={{ flex: '0 0 45%', display: 'flex', flexDirection: 'column', padding: '60px 100px', justifyContent: 'center' }}>
-        <div style={{ marginBottom: '36px' }}>
+      <div style={{ 
+        flex: '0 0 45%', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        padding: '40px 60px', 
+        justifyContent: 'center',
+        height: '100%',
+        overflowY: 'auto',
+        minHeight: 0
+      }}>
+        <div style={{ marginBottom: '24px' }}>
           <h1 style={{ fontSize: '36px', marginBottom: '8px' }}>{t('signIn')}</h1>
           <p style={{ color: 'var(--text-secondary)' }}>{t('signInDesc')}</p>
         </div>
