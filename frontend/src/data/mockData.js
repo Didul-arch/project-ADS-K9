@@ -8,7 +8,8 @@ export const items = [
     date: "2024-05-15",
     type: "found",
     status: "Found",
-    image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&q=80&w=400",
+    image:
+      "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&q=80&w=400",
     reporter: "Budi Santoso",
     contactInfo: "WA: 08123456789",
   },
@@ -21,7 +22,6 @@ export const items = [
     date: "2024-05-14",
     type: "lost",
     status: "Lost",
-    image: "https://images.unsplash.com/photo-1627123430984-7151107d3bca?auto=format&fit=crop&q=80&w=400",
     reporter: "Siti Aminah",
     contactInfo: "IG: @sitiaminah_ipb",
   },
@@ -34,7 +34,8 @@ export const items = [
     date: "2024-05-13",
     type: "found",
     status: "Returned",
-    image: "https://images.unsplash.com/photo-1602143307185-83e312e4466d?auto=format&fit=crop&q=80&w=400",
+    image:
+      "https://images.unsplash.com/photo-1602143307185-83e312e4466d?auto=format&fit=crop&q=80&w=400",
     reporter: "Andi Wijaya",
     contactInfo: "email: andi@apps.ipb.ac.id",
   },
@@ -47,9 +48,62 @@ export const items = [
     date: "2024-05-12",
     type: "lost",
     status: "Lost",
-    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=400",
+    image:
+      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=400",
     reporter: "Rizky Ramadhan",
     contactInfo: "WA: 08987654321",
+  },
+  {
+    id: 5,
+    title: "Silver Watch",
+    description: "Found in Library CCR. Rolex brand, working condition.",
+    category: "Accessories",
+    location: "CCR",
+    date: "2024-05-11",
+    type: "found",
+    status: "Found",
+    image:
+      "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80&w=400",
+    reporter: "Dwi Putri",
+    contactInfo: "WA: 08765432109",
+  },
+  {
+    id: 6,
+    title: "AirPods Pro",
+    description: "Lost at Gymnasium during workout session. White color.",
+    category: "Electronics",
+    location: "Gymnasium",
+    date: "2024-05-10",
+    type: "lost",
+    status: "Lost",
+    reporter: "Ahmad Fadli",
+    contactInfo: "IG: @fadhli_ahmad",
+  },
+  {
+    id: 7,
+    title: "Blue Jacket Burberry",
+    description: "Found near parking area GWW. Navy color, clean condition.",
+    category: "Clothing",
+    location: "GWW",
+    date: "2024-05-09",
+    type: "found",
+    status: "Returned",
+    image:
+      "https://images.unsplash.com/photo-1551028719-00167b16ebc5?auto=format&fit=crop&q=80&w=400",
+    reporter: "Sinta Kusuma",
+    contactInfo: "email: sinta@apps.ipb.ac.id",
+  },
+  {
+    id: 8,
+    title: "Driving License (Neel Vyas Texas)",
+    description: "Lost at SFO Terminal 1. Contains important documents.",
+    category: "Documents",
+    location: "AHN",
+    date: "2024-05-08",
+    type: "lost",
+    status: "Lost",
+    reporter: "Neel Vyas",
+    contactInfo: "WA: 081234567890",
   },
 ];
 
@@ -83,7 +137,7 @@ export const locations = [
   "SPs",
   "SKHB",
   "SSMI",
-  "SV"
+  "SV",
 ];
 
 export const stats = {
