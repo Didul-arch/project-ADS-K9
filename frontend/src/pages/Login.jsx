@@ -147,6 +147,36 @@ const Login = () => {
           <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '16px', fontSize: '16px' }}>
             {t('signIn')}
           </button>
+
+          <button 
+            type="button"
+            onClick={() => navigate('/')} 
+            style={{ 
+              width: '100%', 
+              padding: '16px', 
+              fontSize: '16px', 
+              marginTop: '12px',
+              borderRadius: '16px',
+              border: '1.5px solid #4F46E5',
+              backgroundColor: 'transparent',
+              color: '#4F46E5',
+              fontWeight: '700',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(79, 70, 229, 0.05)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+          >
+            {t('browseAsGuest')}
+          </button>
         </form>
 
         <p style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px', color: 'var(--text-secondary)' }}>
