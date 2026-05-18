@@ -7,13 +7,13 @@ import { MapPin, Calendar, Tag, User, ArrowLeft, MessageCircle, ShieldCheck, Cop
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { useItems } from '../context/ItemsContext';
 
 const Detail = () => {
   const { id } = useParams();
   const { t, language } = useLanguage();
   const { user } = useAuth();
-  const localReported = JSON.parse(localStorage.getItem('reported_items') || '[]');
-  const allItems = [...items, ...localReported];
+  const { items: allItems } = useItems();
   const item = allItems.find(i => i.id == id);
   
   const [showContactModal, setShowContactModal] = useState(false);

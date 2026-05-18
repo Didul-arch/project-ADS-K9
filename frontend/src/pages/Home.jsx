@@ -1,18 +1,18 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
 import ItemCard from '../components/ItemCard';
-import { items } from '../data/mockData';
 import { motion } from 'framer-motion';
 import { Search, PlusCircle, ArrowRight, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { useItems } from '../context/ItemsContext';
 
 const Home = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const localReported = JSON.parse(localStorage.getItem('reported_items') || '[]');
-  const allItems = [...localReported, ...items];
+  const { items: allItems } = useItems();
+  
   const recentItems = allItems.slice(0, 3);
 
   return (

@@ -1,22 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import StatCard from '../components/StatCard';
 import ItemCard from '../components/ItemCard';
 import { Search, AlertCircle, CheckCircle, Package } from 'lucide-react';
-import { items, stats } from '../data/mockData';
 import { motion } from 'framer-motion';
-import { useLanguage } from '../context/LanguageContext';
-
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useItems } from '../context/ItemsContext';
 
 const Dashboard = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { items: allItems } = useItems();
+  const [activeTab, setActiveTab] = useState('active');
   const isAdmin = user?.role === 'Admin';
 
   // Load localStorage reported items
   const localReported = JSON.parse(localStorage.getItem('reported_items') || '[]');
-  const allItems = [...localReported, ...items];
   const recentItems = allItems.slice(0, 3);
 
   // Load local notifications count

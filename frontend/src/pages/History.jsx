@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useItems } from '../context/ItemsContext';
 import { Clock, CheckCircle, MoreVertical, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const History = () => {
   const { user } = useAuth();
   const { language } = useLanguage();
+  const { items: allItems } = useItems();
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
@@ -15,68 +17,22 @@ const History = () => {
     const stored = localStorage.getItem('reported_items');
     const localOnly = stored ? JSON.parse(stored) : [];
 
-    // 2. Define the static/default activity history to ensure a beautiful initial state
-    const defaultHistory = [
-      {
-        id: 101,
-        title: "iPhone 13 Pro Max",
-        category: "Electronics",
-        location: "LSI Library",
-        date: "2026-05-15",
-        type: "lost",
-        image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&q=80&w=400",
-        reporterEmail: "luqman@apps.ipb.ac.id",
-        activityDate: "2026-05-15",
-        activityType: "Reported Lost",
-        activityStatus: "Active"
-      },
-      {
-        id: 102,
-        title: "Black Leather Wallet",
-        category: "Personal Item",
-        location: "Faperta",
-        date: "2026-05-14",
-        type: "lost",
-        image: "https://images.unsplash.com/photo-1627123430984-7151107d3bca?auto=format&fit=crop&q=80&w=400",
-        reporterEmail: "luqman@apps.ipb.ac.id",
-        activityDate: "2026-05-14",
-        activityType: "Reported Lost",
-        activityStatus: "Completed"
-      },
-      {
-        id: 103,
-        title: "Hydro Flask Yellow",
-        category: "Accessories",
-        location: "Gymnasium",
-        date: "2026-05-13",
-        type: "found",
-        image: "https://images.unsplash.com/photo-1602143307185-83e312e4466d?auto=format&fit=crop&q=80&w=400",
-        reporterEmail: "syafiq@apps.ipb.ac.id",
-        activityDate: "2026-05-13",
-        activityType: "Reported Found",
-        activityStatus: "Completed"
-      }
-    ];
-
-    // 3. Combine both lists
-    const combinedList = [...localOnly, ...defaultHistory];
-
     // 4. Filter based on the currently logged-in user!
     if (user) {
-      // Logged-in users see items they reported in local storage or default items with their email
-      const userFiltered = combinedList.filter(item => item.reporterEmail === user.email);
+      // Logged-in users see items they reported in local storage or backend items with their email/ID
+      const userFiltered = allItems.filter(item => item.reporterEmail === user.email || item.reporterId === user.id);
       setHistory(userFiltered);
     } else {
-      // Guests see items they reported locally on this browser plus default found/guest items
-      const guestFiltered = combinedList.filter(item => 
-        localOnly.some(localItem => localItem.id === item.id) || 
+      // Guests see items they reported locally on this browser
+      const guestFiltered = allItems.filter(item => 
+        localOnly.some(localItem => localItem.id == item.id) || 
         !item.reporterEmail || 
         item.reporterEmail === 'Guest' || 
         item.reporterEmail.includes('@') === false
       );
       setHistory(guestFiltered);
     }
-  }, [user]);
+  }, [user, allItems]);
 
   // Labels based on active language
   const titleText = language === 'en' ? 'My Activity History' : 'Riwayat Aktivitas Saya';

@@ -12,36 +12,39 @@ import SignUp from './pages/SignUp';
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider } from './context/AuthContext';
 import { SearchProvider } from './context/SearchContext';
+import { ItemsProvider } from './context/ItemsContext';
 
 function App() {
   return (
     <AuthProvider>
       <SearchProvider>
         <LanguageProvider>
-          <Router>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/*" element={
-              <div className="app-container">
-                <Sidebar />
-                <main className="main-content">
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/browse" element={<Browse />} />
-                    <Route path="/report" element={<Report />} />
-                    <Route path="/detail/:id" element={<Detail />} />
-                    <Route path="/history" element={<History />} />
-                  </Routes>
-                </main>
-              </div>
-            } />
-          </Routes>
-        </Router>
-      </LanguageProvider>
-    </SearchProvider>
-  </AuthProvider>
+          <ItemsProvider>
+            <Router>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<SignUp />} />
+                <Route path="/*" element={
+                  <div className="app-container">
+                    <Sidebar />
+                    <main className="main-content">
+                      <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/browse" element={<Browse />} />
+                        <Route path="/report" element={<Report />} />
+                        <Route path="/detail/:id" element={<Detail />} />
+                        <Route path="/history" element={<History />} />
+                      </Routes>
+                    </main>
+                  </div>
+                } />
+              </Routes>
+            </Router>
+          </ItemsProvider>
+        </LanguageProvider>
+      </SearchProvider>
+    </AuthProvider>
   );
 }
 

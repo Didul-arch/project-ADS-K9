@@ -5,10 +5,14 @@ import { categories, locations } from '../data/mockData';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { useItems } from '../context/ItemsContext';
+import { useNavigate } from 'react-router-dom';
 
 const Report = () => {
+  const navigate = useNavigate();
   const { language, t } = useLanguage();
   const { user } = useAuth();
+  const { refreshItems } = useItems();
   
   const [submitted, setSubmitted] = useState(false);
   const [file, setFile] = useState(null);
@@ -104,6 +108,8 @@ const Report = () => {
 
       if (response.ok) {
         console.log('Successfully posted reported item to backend DB!');
+        // Trigger a global context refresh so Browse/Dashboard update instantly
+        refreshItems();
       } else {
         console.error('Failed to post to backend DB:', await response.text());
       }
