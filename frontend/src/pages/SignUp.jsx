@@ -9,7 +9,6 @@ import ipbLogoWhite from '../assets/ipb-logo-white.png';
 const SignUp = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [adminCode, setAdminCode] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
@@ -42,7 +41,7 @@ const SignUp = () => {
       return;
     }
 
-    const success = await signUp(name, email, password, adminCode);
+    const success = await signUp(name, email, password);
     if (success) {
       navigate('/dashboard');
     } else {
@@ -159,19 +158,7 @@ const SignUp = () => {
             />
           </div>
 
-          {/* Admin Referral Code (Optional) */}
-          <div className="form-group">
-            <label style={{ fontSize: '14px' }}>
-              {language === 'en' ? 'Admin Secret Code (Optional)' : 'Kode Referal Admin (Opsional)'}
-            </label>
-            <input 
-              type="text" 
-              className="form-input" 
-              placeholder="e.g. IPB_ADMIN_2026" 
-              value={adminCode}
-              onChange={(e) => setAdminCode(e.target.value)}
-            />
-          </div>
+
 
           {/* Password */}
           <div className="form-group" style={{ position: 'relative' }}>

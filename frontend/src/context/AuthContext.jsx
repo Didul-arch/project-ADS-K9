@@ -83,7 +83,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
   };
 
-  const signUp = async (name, email, password, adminCode) => {
+  const signUp = async (name, email, password) => {
     try {
       const response = await fetch('http://localhost:8000/users/', {
         method: 'POST',
@@ -93,8 +93,7 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({
           email: email.trim(),
           fullname: name,
-          password: password,
-          admin_code: adminCode || null
+          password: password
         }),
       });
 
