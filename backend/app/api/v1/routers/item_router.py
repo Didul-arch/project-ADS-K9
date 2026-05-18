@@ -1,6 +1,8 @@
 from datetime import datetime
 from datetime import date
 
+from app.api.v1.routers.auth_router import get_current_user
+from app.domains.user.entity import UserEntity
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,7 +15,7 @@ from app.infrastructure.repositories.item_repository import ItemRepository
 router = APIRouter()
 
 
-def build_item(payload, status: ItemStatus, report_type: ReportType) -> ItemEntity:
+def build_item(payload, status: ItemStatus, report_type: ReportType, reporter_id: int) -> ItemEntity:
 	return ItemEntity(
 		id=None,
 		title=payload.title,
@@ -24,7 +26,7 @@ def build_item(payload, status: ItemStatus, report_type: ReportType) -> ItemEnti
 		longitude=None,
 		report_type=report_type,
 		status=status,
-		reporter_id=payload.reporter_id,
+		reporter_id=reporter_id,
 		created_at=datetime.now(),
 	)
 
@@ -33,13 +35,16 @@ def build_item(payload, status: ItemStatus, report_type: ReportType) -> ItemEnti
 async def report_lost_item(
 	payload: ReportItemRequest,
 	db: AsyncSession = Depends(get_db),
+	current_user: UserEntity = Depends(get_current_user)
 ):
 	repo = ItemRepository(db)
 	service = ItemService(repo)
 
+	reporter_id = current_user.id
+
 	try:
 		result = await service.report_lost_item(
-			build_item(payload, ItemStatus.LOST, ReportType.LOST)
+			build_item(payload, ItemStatus.LOST, ReportType.LOST, reporter_id)
 		)
 		return {"status": "success", "data": result}
 	except ValueError as e:
@@ -50,13 +55,16 @@ async def report_lost_item(
 async def report_found_item(
 	payload: ReportFoundItemRequest,
 	db: AsyncSession = Depends(get_db),
+	current_user: UserEntity = Depends(get_current_user)
 ):
 	repo = ItemRepository(db)
 	service = ItemService(repo)
 
+	reporter_id = current_user.id
+
 	try:
 		result = await service.report_found_item(
-			build_item(payload, ItemStatus.FOUND, ReportType.FOUND)
+			build_item(payload, ItemStatus.FOUND, ReportType.FOUND, reporter_id)
 		)
 		return {"status": "success", "data": result}
 	except ValueError as e:

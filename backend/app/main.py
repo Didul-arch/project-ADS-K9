@@ -10,7 +10,7 @@ from app.api.v1.routers.user_router import router as user_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="SIPESAT - Lost & Found IPB")
+app = FastAPI(title="Lost & Found IPB")
 
 # Enable CORS for cross-origin API calls from the React frontend port
 app.add_middleware(

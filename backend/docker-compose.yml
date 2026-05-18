@@ -1,25 +1,28 @@
 services:
-  web:
-    build: . # Docker akan mencari 'Dockerfile' di folder ini untuk membuat image aplikasi
-    container_name: ads_backend 
+  # 1. Service untuk Backend
+  ads_backend:
+    build: .
+    container_name: ads_backend
     ports:
-      - "8080:8080"
+      - "8000:8000"
     env_file:
-      - .env # Memasukkan variabel env ke aplikasi
+      - .env
     depends_on:
-      - db # Memastikan database jalan duluan sebelum aplikasi start
+      - db
+    restart: unless-stopped
 
   # 2. Service untuk Database PostgreSQL
   db:
     image: postgres:17-alpine
-    container_name: ads_db
+    container_name: postgres_db
     restart: unless-stopped
     env_file:
-      - .env # PostgreSQL akan membaca POSTGRES_USER, POSTGRES_PASSWORD, dan POSTGRES_DB dari sini
+      - .env
     ports:
-      - "6969:5432" # Agar kamu tetap bisa remote database pakai DBeaver/PgAdmin dari laptop
+      - "6969:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
 
 volumes:
-  pgdata: # Menjaga agar data database tidak hilang saat container dimatikan
+  pg_data:
+    name: ads_pg_data

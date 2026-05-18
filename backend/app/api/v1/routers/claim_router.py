@@ -9,16 +9,19 @@ from app.domains.claim.service import ClaimService
 from app.infrastructure.db.session import get_db
 from app.infrastructure.repositories.claim_repository import ClaimRepository
 
+from app.api.v1.routers.auth_router import get_current_user  # Adjust path if your folder layout is different
+from app.domains.user.entity import UserEntity, Role
+
 router = APIRouter()
 
-
-def build_claim(payload: CreateClaimRequest) -> ClaimEntity:
+# Updated helper to accept the authenticating user's ID
+def build_claim(payload: CreateClaimRequest, claimer_id: int) -> ClaimEntity:
 	return ClaimEntity(
 		id=None,
 		proof_text=payload.proof_text,
 		proof_image=payload.proof_image,
 		status=ClaimStatus.PENDING,
-		claimer_id=payload.claimer_id,
+		claimer_id=claimer_id,        
 		item_id=payload.item_id,
 		reviewer_id=None,
 		reviewed_at=None,
@@ -28,12 +31,17 @@ def build_claim(payload: CreateClaimRequest) -> ClaimEntity:
 
 
 @router.post("/claims/")
-async def create_claim(payload: CreateClaimRequest, db: AsyncSession = Depends(get_db)):
+async def create_claim(
+	payload: CreateClaimRequest, 
+	db: AsyncSession = Depends(get_db),
+	current_user: UserEntity = Depends(get_current_user)
+):
 	repo = ClaimRepository(db)
 	service = ClaimService(repo)
 
 	try:
-		claim = await service.submit_claim(build_claim(payload))
+		# Pass current_user.id directly so they can't impersonate someone else
+		claim = await service.submit_claim(build_claim(payload, current_user.id))
 		return {"status": "success", "data": claim}
 	except ValueError as e:
 		raise HTTPException(status_code=400, detail=str(e))
@@ -47,9 +55,14 @@ async def list_claims(
 	status: ClaimStatus | None = None,
 	limit: int = 20,
 	db: AsyncSession = Depends(get_db),
+	current_user: UserEntity = Depends(get_current_user)
 ):
 	repo = ClaimRepository(db)
 	service = ClaimService(repo)
+
+	# regular users can only see their own claims:
+	if current_user.role != Role.ADMIN:
+		claimer_id = current_user.id
 
 	claims = await service.get_all(
 		claim_date=claim_date,
@@ -62,7 +75,12 @@ async def list_claims(
 
 
 @router.get("/claims/{claim_id}")
-async def get_claim_detail(claim_id: int, db: AsyncSession = Depends(get_db)):
+# --- CHANGED: Added current_user dependency ---
+async def get_claim_detail(
+	claim_id: int, 
+	db: AsyncSession = Depends(get_db),
+	current_user: UserEntity = Depends(get_current_user)
+):
 	repo = ClaimRepository(db)
 	service = ClaimService(repo)
 	claim = await service.get_by_id(claim_id)
@@ -74,11 +92,17 @@ async def get_claim_detail(claim_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.patch("/claims/{claim_id}/review")
+# --- CHANGED: Added current_user dependency with Admin check ---
 async def review_claim(
 	claim_id: int,
 	payload: ReviewClaimRequest,
 	db: AsyncSession = Depends(get_db),
+	current_user: UserEntity = Depends(get_current_user)
 ):
+	# Role validation: block users who are not Admin
+	if current_user.role != Role.ADMIN:
+		raise HTTPException(status_code=403, detail="Hanya admin yang dapat mereview claim")
+
 	repo = ClaimRepository(db)
 	service = ClaimService(repo)
 
@@ -86,7 +110,7 @@ async def review_claim(
 		reviewed_claim = await service.review_claim(
 			claim_id=claim_id,
 			new_status=payload.status,
-			reviewer_id=payload.reviewer_id,
+			reviewer_id=current_user.id, # Securely inject admin ID from JWT
 		)
 	except ValueError as e:
 		raise HTTPException(status_code=400, detail=str(e))
