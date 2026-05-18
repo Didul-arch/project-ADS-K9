@@ -6,16 +6,25 @@ import { items } from '../data/mockData';
 import { MapPin, Calendar, Tag, User, ArrowLeft, MessageCircle, ShieldCheck, Copy, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 const Detail = () => {
   const { id } = useParams();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { user } = useAuth();
   const item = items.find(i => i.id === parseInt(id));
   
   const [showContactModal, setShowContactModal] = useState(false);
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [claimSubmitted, setClaimSubmitted] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Guest claim form states
+  const [guestName, setGuestName] = useState('');
+  const [guestNIK, setGuestNIK] = useState('');
+  const [guestAge, setGuestAge] = useState('');
+  const [guestAddress, setGuestAddress] = useState('');
+  const [guestKTPFile, setGuestKTPFile] = useState(null);
 
   if (!item) return <div>Item not found</div>;
 
@@ -226,13 +235,124 @@ const Detail = () => {
         {!claimSubmitted ? (
           <form onSubmit={handleClaimSubmit}>
             <p style={{ marginBottom: '20px', color: 'var(--text-secondary)' }}>{t('claimDesc')}</p>
-            <textarea 
-              className="form-input" 
-              placeholder={t('proofPlaceholder')}
-              style={{ minHeight: '120px', marginBottom: '24px', paddingTop: '12px' }}
-              required
-            ></textarea>
-            <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+
+            {/* Guest Identity Verification Block */}
+            {!user && (
+              <div style={{
+                background: '#FFF8F6',
+                borderRadius: '16px',
+                padding: '16px',
+                border: '1px solid #FFD0C6',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                marginBottom: '20px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ShieldCheck size={18} color="#EE5D50" />
+                  <h4 style={{ margin: 0, fontSize: '14px', color: '#EE5D50', fontWeight: 800 }}>
+                    {t('guestVerification')}
+                  </h4>
+                </div>
+                <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  {t('guestVerificationDesc')}
+                </p>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label style={{ fontSize: '12px' }}>{t('nameLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    placeholder={t('namePlaceholder')} 
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    style={{ padding: '8px 12px', fontSize: '13px' }}
+                    required
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label style={{ fontSize: '12px' }}>{t('nikLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      maxLength="16"
+                      pattern="\d{16}"
+                      placeholder="NIK (16 digit)" 
+                      value={guestNIK}
+                      onChange={(e) => setGuestNIK(e.target.value.replace(/\D/g, ''))}
+                      style={{ padding: '8px 12px', fontSize: '13px' }}
+                      required
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label style={{ fontSize: '12px' }}>{t('ageLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
+                    <input 
+                      type="number" 
+                      className="form-input" 
+                      min="1"
+                      placeholder="Age" 
+                      value={guestAge}
+                      onChange={(e) => setGuestAge(e.target.value)}
+                      style={{ padding: '8px 12px', fontSize: '13px' }}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label style={{ fontSize: '12px' }}>{t('addressLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
+                  <textarea 
+                    className="form-input" 
+                    placeholder="Address" 
+                    value={guestAddress}
+                    onChange={(e) => setGuestAddress(e.target.value)}
+                    style={{ padding: '8px 12px', fontSize: '13px', height: '60px', resize: 'none', minHeight: '60px' }}
+                    required
+                  ></textarea>
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label style={{ fontSize: '12px' }}>{t('uploadIdCard')} <span style={{ color: '#EE5D50' }}>*</span></label>
+                  <div 
+                    onClick={() => document.getElementById('guestKtpClaimInput').click()}
+                    style={{
+                      border: '1.5px dashed #FFD0C6',
+                      borderRadius: '12px',
+                      padding: '12px',
+                      textAlign: 'center',
+                      background: guestKTPFile ? '#E2F9EB' : 'white',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: guestKTPFile ? '#01B574' : '#EE5D50'
+                    }}
+                  >
+                    {guestKTPFile ? `✓ ${guestKTPFile.name}` : t('uploadIdCard')}
+                    <input 
+                      type="file" 
+                      id="guestKtpClaimInput"
+                      style={{ display: 'none' }} 
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setGuestKTPFile(e.target.files[0]);
+                        }
+                      }}
+                      required={!user}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="form-group">
+              <label style={{ fontSize: '13px' }}>{language === 'en' ? 'Proof of Ownership' : 'Bukti Kepemilikan'} <span style={{ color: '#EE5D50' }}>*</span></label>
+              <textarea 
+                className="form-input" 
+                placeholder={t('proofPlaceholder')}
+                style={{ minHeight: '120px', marginBottom: '24px', paddingTop: '12px' }}
+                required
+              ></textarea>
+            </div>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '16px' }}>
               {t('submitClaim')}
             </button>
           </form>

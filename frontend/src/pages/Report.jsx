@@ -18,6 +18,12 @@ const Report = () => {
   const [publicEmail, setPublicEmail] = useState('');
   const [publicWhatsApp, setPublicWhatsApp] = useState('');
 
+  // Guest ID verification fields
+  const [guestNIK, setGuestNIK] = useState('');
+  const [guestAge, setGuestAge] = useState('');
+  const [guestAddress, setGuestAddress] = useState('');
+  const [guestKTPFile, setGuestKTPFile] = useState(null);
+
   // Auto-fill logged-in user details if present, but allow editing
   React.useEffect(() => {
     if (user) {
@@ -140,6 +146,10 @@ const Report = () => {
     setPublicName('');
     setPublicEmail('');
     setPublicWhatsApp('');
+    setGuestNIK('');
+    setGuestAge('');
+    setGuestAddress('');
+    setGuestKTPFile(null);
     setSubmitted(false);
   };
 
@@ -325,6 +335,106 @@ const Report = () => {
                 </div>
               </div>
             </div>
+
+            {/* Guest Identity Verification Block */}
+            {!user && (
+              <div style={{
+                gridColumn: '1 / -1',
+                background: '#FFF8F6',
+                borderRadius: '20px',
+                padding: '24px',
+                border: '1.5px solid #FFD0C6',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+                marginBottom: '10px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <ShieldCheck size={22} color="#EE5D50" />
+                  <h4 style={{ margin: 0, fontSize: '16px', color: '#EE5D50', fontWeight: 800 }}>
+                    {t('guestVerification')}
+                  </h4>
+                </div>
+                <p style={{ margin: '0 0 10px 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  {t('guestVerificationDesc')}
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '20px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label style={{ fontSize: '13px' }}>{t('nikLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        maxLength="16"
+                        pattern="\d{16}"
+                        placeholder="e.g. 3201xxxxxxxxxxxx" 
+                        value={guestNIK}
+                        onChange={(e) => setGuestNIK(e.target.value.replace(/\D/g, ''))}
+                        required
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label style={{ fontSize: '13px' }}>{t('ageLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
+                      <input 
+                        type="number" 
+                        className="form-input" 
+                        min="1"
+                        max="120"
+                        placeholder="e.g. 21" 
+                        value={guestAge}
+                        onChange={(e) => setGuestAge(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label style={{ fontSize: '13px' }}>{t('addressLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
+                    <textarea 
+                      className="form-input" 
+                      placeholder="e.g. Jl. Raya Pajajaran No. 1, Bogor" 
+                      value={guestAddress}
+                      onChange={(e) => setGuestAddress(e.target.value)}
+                      style={{ height: '115px', resize: 'none', paddingTop: '10px' }}
+                      required
+                    ></textarea>
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label style={{ fontSize: '13px' }}>{t('uploadIdCard')} <span style={{ color: '#EE5D50' }}>*</span></label>
+                  <div 
+                    onClick={() => document.getElementById('guestKtpInput').click()}
+                    style={{
+                      border: '2px dashed #FFD0C6',
+                      borderRadius: '16px',
+                      padding: '20px',
+                      textAlign: 'center',
+                      background: guestKTPFile ? '#E2F9EB' : 'white',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      borderStyle: guestKTPFile ? 'solid' : 'dashed',
+                      borderColor: guestKTPFile ? '#01B574' : '#FFD0C6'
+                    }}
+                  >
+                    <span style={{ fontSize: '14px', fontWeight: '600', color: guestKTPFile ? '#01B574' : '#EE5D50' }}>
+                      {guestKTPFile ? `✓ ${guestKTPFile.name}` : t('uploadIdCard')}
+                    </span>
+                    <input 
+                      type="file" 
+                      id="guestKtpInput"
+                      style={{ display: 'none' }} 
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setGuestKTPFile(e.target.files[0]);
+                        }
+                      }}
+                      required={!user}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="form-group" style={{ marginBottom: '40px' }}>

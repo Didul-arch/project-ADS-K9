@@ -130,6 +130,12 @@ export const translations = {
     department: "Department",
     switchRole: "Switch Role",
     guest: "Guest",
+    nikLabel: "Nomor KTP / NIK (16 Digits)",
+    ageLabel: "Age (Years)",
+    addressLabel: "Current Address",
+    uploadIdCard: "Upload Official ID Card (KTP/SIM/Passport)",
+    guestVerification: "Guest Identity Verification",
+    guestVerificationDesc: "To ensure security, general users must provide official identity details.",
   },
   id: {
     // Sidebar
@@ -262,5 +268,11 @@ export const translations = {
     department: "Departemen",
     switchRole: "Ganti Peran",
     guest: "Tamu",
+    nikLabel: "Nomor KTP / NIK (16 Digit)",
+    ageLabel: "Usia (Tahun)",
+    addressLabel: "Alamat Domisili Saat Ini",
+    uploadIdCard: "Unggah Kartu Identitas Resmi (KTP/SIM/Paspor)",
+    guestVerification: "Verifikasi Identitas Tamu",
+    guestVerificationDesc: "Untuk menjaga keamanan, pengguna umum wajib memasukkan detail identitas resmi.",
   }
 };
