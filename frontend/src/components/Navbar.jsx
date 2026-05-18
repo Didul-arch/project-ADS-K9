@@ -19,11 +19,16 @@ const Navbar = ({ title }) => {
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
-  const [notifications, setNotifications] = useState([
-    { id: 1, type: 'match', name: 'iPhone 13 Pro Max', time: '5m ago', read: false },
-    { id: 2, type: 'claim', name: 'Black Leather Wallet', time: '1h ago', read: false },
-    { id: 3, type: 'approved', name: 'Tumbler Hydro Flask', time: '2h ago', read: false },
-  ]);
+  const [notifications, setNotifications] = useState(() => {
+    const defaultNotifs = [
+      { id: 1, type: 'match', name: 'iPhone 13 Pro Max', time: '5m ago', read: false },
+      { id: 2, type: 'claim', name: 'Black Leather Wallet', time: '1h ago', read: false },
+      { id: 3, type: 'approved', name: 'Tumbler Hydro Flask', time: '2h ago', read: false },
+    ];
+    const local = localStorage.getItem('notifications');
+    const parsedLocal = local ? JSON.parse(local) : [];
+    return [...parsedLocal, ...defaultNotifs];
+  });
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -51,12 +56,23 @@ const Navbar = ({ title }) => {
   };
 
   const markAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setNotifications(prev => {
+      const updated = prev.map(n => ({ ...n, read: true }));
+      // Save local ones back to localStorage
+      const localOnly = updated.filter(n => n.id > 10);
+      localStorage.setItem('notifications', JSON.stringify(localOnly));
+      return updated;
+    });
   };
 
   const handleNotifClick = (notif) => {
     // Mark as read
-    setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
+    setNotifications(prev => {
+      const updated = prev.map(n => n.id === notif.id ? { ...n, read: true } : n);
+      const localOnly = updated.filter(n => n.id > 10);
+      localStorage.setItem('notifications', JSON.stringify(localOnly));
+      return updated;
+    });
     setShowNotif(false);
     
     // Navigate based on type

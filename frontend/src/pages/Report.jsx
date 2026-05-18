@@ -103,7 +103,20 @@ const Report = () => {
     itemsList.unshift(newItem);
     localStorage.setItem('reported_items', JSON.stringify(itemsList));
 
-    console.log('Saved Report to LocalStorage:', newItem);
+    // 3. Add to dynamic notifications
+    const newNotif = {
+      id: Date.now(),
+      type: reportType === 'lost' ? 'match' : 'approved',
+      name: itemName,
+      time: '1s ago',
+      read: false
+    };
+    const existingNotifs = localStorage.getItem('notifications');
+    const notifsList = existingNotifs ? JSON.parse(existingNotifs) : [];
+    notifsList.unshift(newNotif);
+    localStorage.setItem('notifications', JSON.stringify(notifsList));
+
+    console.log('Saved Report and Notif to LocalStorage:', newItem);
     setSubmitted(true);
   };
 
