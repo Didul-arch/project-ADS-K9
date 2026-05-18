@@ -13,7 +13,21 @@ const Dashboard = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
   const isAdmin = user?.role === 'Admin';
-  const recentItems = items.slice(0, 3);
+
+  // Load localStorage reported items
+  const localReported = JSON.parse(localStorage.getItem('reported_items') || '[]');
+  const allItems = [...localReported, ...items];
+  const recentItems = allItems.slice(0, 3);
+
+  // Load local notifications count
+  const localNotifs = JSON.parse(localStorage.getItem('notifications') || '[]');
+  const unreadNotifCount = localNotifs.filter(n => !n.read).length + 3; // base 3 mocks
+
+  // Calculate dynamic stats
+  const userReports = localReported.filter(item => item.reporterEmail === user?.email);
+  const totalUserReportsCount = userReports.length + 3; // base 3 mocks
+  const foundItemsCount = userReports.filter(item => item.type === 'found').length + 1; // base 1 mock
+  const matchesCount = userReports.filter(item => item.status === 'Matched').length + 2; // base 2 mocks
 
   // Capitalize the first letter of user's name dynamically for high visual polish
   const userName = user?.name 
@@ -99,7 +113,7 @@ const Dashboard = () => {
             </div>
             <div>
               <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>{t('welcomeBack')}, {userName}! 👋</h1>
-              <p>{t('activeReportsMsg', { count: 2, notif: 1 })}</p>
+              <p>{t('activeReportsMsg', { count: totalUserReportsCount, notif: unreadNotifCount })}</p>
             </div>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px' }}>
               <button className="btn btn-primary">{t('manageReports')}</button>
@@ -112,9 +126,9 @@ const Dashboard = () => {
             gap: '24px',
             marginBottom: '40px'
           }}>
-            <StatCard label={t('yourReports')} value="3" icon={<Package size={24} />} />
-            <StatCard label={t('foundItems')} value="1" icon={<CheckCircle size={24} />} color="#01B574" />
-            <StatCard label={t('matchesFound')} value="2" icon={<AlertCircle size={24} />} color="#0075FF" />
+            <StatCard label={t('yourReports')} value={totalUserReportsCount.toString()} icon={<Package size={24} />} />
+            <StatCard label={t('foundItems')} value={foundItemsCount.toString()} icon={<CheckCircle size={24} />} color="#01B574" />
+            <StatCard label={t('matchesFound')} value={matchesCount.toString()} icon={<AlertCircle size={24} />} color="#0075FF" />
             <StatCard label={t('profileCompletion')} value="85%" icon={<Search size={24} />} color="#EE5D50" />
           </div>
         </>

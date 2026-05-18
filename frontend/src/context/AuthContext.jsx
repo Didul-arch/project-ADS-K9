@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
       params.append('username', email.trim());
       params.append('password', password);
 
-      const response = await fetch('http://localhost:8000/token', {
+      const response = await fetch('http://localhost:8080/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', token);
 
       // Fetch user profile info
-      const meResponse = await fetch('http://localhost:8000/users/me', {
+      const meResponse = await fetch('http://localhost:8080/users/me', {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -83,9 +83,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
   };
 
-  const signUp = async (name, email, password, adminCode) => {
+  const signUp = async (name, email, password) => {
     try {
-      const response = await fetch('http://localhost:8000/users/', {
+      const response = await fetch('http://localhost:8080/users/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -93,8 +93,7 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({
           email: email.trim(),
           fullname: name,
-          password: password,
-          admin_code: adminCode || null
+          password: password
         }),
       });
 

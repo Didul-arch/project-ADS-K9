@@ -19,11 +19,16 @@ const Navbar = ({ title }) => {
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
-  const [notifications, setNotifications] = useState([
-    { id: 1, type: 'match', name: 'iPhone 13 Pro Max', time: '5m ago', read: false },
-    { id: 2, type: 'claim', name: 'Black Leather Wallet', time: '1h ago', read: false },
-    { id: 3, type: 'approved', name: 'Tumbler Hydro Flask', time: '2h ago', read: false },
-  ]);
+  const [notifications, setNotifications] = useState(() => {
+    const defaultNotifs = [
+      { id: 1, type: 'match', name: 'iPhone 13 Pro Max', time: '5m ago', read: false },
+      { id: 2, type: 'claim', name: 'Black Leather Wallet', time: '1h ago', read: false },
+      { id: 3, type: 'approved', name: 'Tumbler Hydro Flask', time: '2h ago', read: false },
+    ];
+    const local = localStorage.getItem('notifications');
+    const parsedLocal = local ? JSON.parse(local) : [];
+    return [...parsedLocal, ...defaultNotifs];
+  });
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -51,12 +56,23 @@ const Navbar = ({ title }) => {
   };
 
   const markAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setNotifications(prev => {
+      const updated = prev.map(n => ({ ...n, read: true }));
+      // Save local ones back to localStorage
+      const localOnly = updated.filter(n => n.id > 10);
+      localStorage.setItem('notifications', JSON.stringify(localOnly));
+      return updated;
+    });
   };
 
   const handleNotifClick = (notif) => {
     // Mark as read
-    setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n));
+    setNotifications(prev => {
+      const updated = prev.map(n => n.id === notif.id ? { ...n, read: true } : n);
+      const localOnly = updated.filter(n => n.id > 10);
+      localStorage.setItem('notifications', JSON.stringify(localOnly));
+      return updated;
+    });
     setShowNotif(false);
     
     // Navigate based on type
@@ -377,7 +393,7 @@ const Navbar = ({ title }) => {
                       {user ? user.name : t('guest')}
                     </h4>
                     <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {user ? user.email : 'guest@apps.ipb.ac.id'}
+                      {user ? user.email : (language === 'en' ? 'Browsing as Guest' : 'Menjelajah sebagai Tamu')}
                     </p>
                   </div>
                 </div>
@@ -396,55 +412,121 @@ const Navbar = ({ title }) => {
                   {user ? user.role : t('guest')}
                 </div>
 
+                {/* Additional Profile Info (Only shown for logged-in IPB/Civitas/Admin users) */}
+                {user && (
+                  <>
+                    <hr style={{ border: 'none', borderTop: '1px solid #E0E5F2', margin: 0 }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>{t('studentId')}</span>
+                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                          {user.role === 'Admin' ? 'A24090001' : (user.nim || 'G6401221034')}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>{t('department')}</span>
+                        <span style={{ fontWeight: 600, color: 'var(--text-primary)', textAlign: 'right', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {user.role === 'Admin' ? 'Direktorat Sistem Informasi' : (user.department || 'Ilmu Komputer')}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 <hr style={{ border: 'none', borderTop: '1px solid #E0E5F2', margin: 0 }} />
 
-                {/* Additional Profile Info */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                    <span style={{ color: 'var(--text-secondary)' }}>{t('studentId')}</span>
-                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                      {user && user.role === 'Admin' ? 'A24090001' : 'G6401221034'}
-                    </span>
+                {/* Conditional CTAs based on login state */}
+                {user ? (
+                  /* Logout Button for Signed-In Users */
+                  <button 
+                    onClick={() => {
+                      logout();
+                      setShowProfile(false);
+                      navigate('/login');
+                    }}
+                    style={{
+                      background: '#FFE5E5',
+                      border: 'none',
+                      borderRadius: '12px',
+                      color: '#EE5D50',
+                      fontWeight: 700,
+                      fontSize: '13px',
+                      padding: '10px 14px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      width: '100%',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#FFD2D2'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#FFE5E5'}
+                  >
+                    <LogOut size={16} />
+                    {t('signOut')}
+                  </button>
+                ) : (
+                  /* Login and Signup Action CTAs for Guests */
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+                    <button 
+                      onClick={() => {
+                        setShowProfile(false);
+                        navigate('/login');
+                      }}
+                      style={{
+                        background: 'var(--ipb-blue)',
+                        border: 'none',
+                        borderRadius: '12px',
+                        color: 'white',
+                        fontWeight: 700,
+                        fontSize: '13px',
+                        padding: '10px 14px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        width: '100%',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(1.1)'}
+                      onMouseLeave={(e) => e.currentTarget.style.filter = 'none'}
+                    >
+                      {t('signIn')}
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setShowProfile(false);
+                        navigate('/signup');
+                      }}
+                      style={{
+                        background: 'white',
+                        border: '1.5px solid var(--ipb-blue)',
+                        borderRadius: '12px',
+                        color: 'var(--ipb-blue)',
+                        fontWeight: 700,
+                        fontSize: '13px',
+                        padding: '10px 14px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        width: '100%',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(0, 117, 255, 0.05)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'white';
+                      }}
+                    >
+                      {t('signUp')}
+                    </button>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                    <span style={{ color: 'var(--text-secondary)' }}>{t('department')}</span>
-                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', textAlign: 'right', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {user && user.role === 'Admin' ? 'Direktorat Sistem Informasi' : 'Ilmu Komputer'}
-                    </span>
-                  </div>
-                </div>
-
-                <hr style={{ border: 'none', borderTop: '1px solid #E0E5F2', margin: 0 }} />
-
-                {/* Logout Button */}
-                <button 
-                  onClick={() => {
-                    logout();
-                    setShowProfile(false);
-                    navigate('/login');
-                  }}
-                  style={{
-                    background: '#FFE5E5',
-                    border: 'none',
-                    borderRadius: '12px',
-                    color: '#EE5D50',
-                    fontWeight: 700,
-                    fontSize: '13px',
-                    padding: '10px 14px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    width: '100%',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = '#FFD2D2'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = '#FFE5E5'}
-                >
-                  <LogOut size={16} />
-                  {t('signOut')}
-                </button>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

@@ -3,7 +3,10 @@ import { MapPin, Calendar, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const ItemCard = ({ item }) => {
+  if (!item) return null;
+
   const getStatusClass = (status) => {
+    if (!status) return "";
     switch (status.toLowerCase()) {
       case "lost":
         return "badge-lost";
@@ -33,13 +36,13 @@ const ItemCard = ({ item }) => {
         >
           <img
             src={item.image}
-            alt={item.title}
+            alt={item.title || "Item"}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
 
           <div style={{ position: "absolute", top: "12px", left: "12px" }}>
             <span className={`badge ${getStatusClass(item.status)}`}>
-              {item.status}
+              {item.status || "Unknown"}
             </span>
           </div>
         </div>
@@ -70,11 +73,11 @@ const ItemCard = ({ item }) => {
               textTransform: "uppercase",
             }}
           >
-            {item.category}
+            {item.category || "General"}
           </span>
         </div>
 
-        <h3 style={{ marginBottom: "12px" }}>{item.title}</h3>
+        <h3 style={{ marginBottom: "12px" }}>{item.title || "Untitled Item"}</h3>
 
         <div
           style={{
@@ -87,13 +90,13 @@ const ItemCard = ({ item }) => {
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <MapPin size={16} color="var(--text-secondary)" />
             <span style={{ fontSize: "14px", color: "var(--text-secondary)" }}>
-              {item.location}
+              {item.location || "IPB Campus"}
             </span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Calendar size={16} color="var(--text-secondary)" />
             <span style={{ fontSize: "14px", color: "var(--text-secondary)" }}>
-              {item.date}
+              {item.date || "Just now"}
             </span>
           </div>
         </div>

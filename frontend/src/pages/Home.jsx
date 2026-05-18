@@ -11,7 +11,9 @@ import { useAuth } from '../context/AuthContext';
 const Home = () => {
   const { t } = useLanguage();
   const { user } = useAuth();
-  const recentItems = items.slice(0, 3);
+  const localReported = JSON.parse(localStorage.getItem('reported_items') || '[]');
+  const allItems = [...localReported, ...items];
+  const recentItems = allItems.slice(0, 3);
 
   return (
     <motion.div

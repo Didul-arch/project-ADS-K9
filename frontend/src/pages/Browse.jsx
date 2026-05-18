@@ -12,7 +12,10 @@ const Browse = () => {
   const [category, setCategory] = useState("all");
   const { searchQuery, setSearchQuery } = useSearch();
 
-  const filteredItems = items.filter((item) => {
+  const localReported = JSON.parse(localStorage.getItem('reported_items') || '[]');
+  const allItems = [...localReported, ...items];
+
+  const filteredItems = allItems.filter((item) => {
     const matchesType = filter === "all" || item.type === filter;
     const matchesCategory = category === "all" || item.category === category;
     const matchesSearch =

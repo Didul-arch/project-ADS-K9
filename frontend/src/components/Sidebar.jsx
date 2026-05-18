@@ -208,44 +208,46 @@ const Sidebar = () => {
         </ul>
       </nav>
 
-      {/* Logout Footer */}
-      <div style={{ 
-        borderTop: '1px solid var(--glass-border)', 
-        paddingTop: '20px',
-        display: 'flex',
-        justifyContent: 'center'
-      }}>
-        <button 
-          onClick={handleLogout} 
-          className="btn" 
-          title={isCollapsed ? t('signOut') : ''}
-          style={{ 
-            width: '100%', 
-            justifyContent: isCollapsed ? 'center' : 'flex-start', 
-            color: '#EE5D50',
-            padding: isCollapsed ? '14px' : '12px 24px',
-            borderRadius: '16px',
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer'
-          }}
-        >
-          <LogOut size={20} />
-          <AnimatePresence>
-            {!isCollapsed && (
-              <motion.span
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.2 }}
-                style={{ whiteSpace: 'nowrap', marginLeft: '12px' }}
-              >
-                {t('signOut')}
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </button>
-      </div>
+      {/* Logout Footer (Only shown for logged-in users) */}
+      {user && (
+        <div style={{ 
+          borderTop: '1px solid var(--glass-border)', 
+          paddingTop: '20px',
+          display: 'flex',
+          justifyContent: 'center'
+        }}>
+          <button 
+            onClick={handleLogout} 
+            className="btn" 
+            title={isCollapsed ? t('signOut') : ''}
+            style={{ 
+              width: '100%', 
+              justifyContent: isCollapsed ? 'center' : 'flex-start', 
+              color: '#EE5D50',
+              padding: isCollapsed ? '14px' : '12px 24px',
+              borderRadius: '16px',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            <LogOut size={20} />
+            <AnimatePresence>
+              {!isCollapsed && (
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.2 }}
+                  style={{ whiteSpace: 'nowrap', marginLeft: '12px' }}
+                >
+                  {t('signOut')}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </button>
+        </div>
+      )}
     </aside>
   );
 };

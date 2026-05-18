@@ -23,9 +23,7 @@ async def create_user(payload: CreateUserRequest, db: AsyncSession = Depends(get
 	service = UserService(repo)
 	
 	resolved_role = Role.UMUM
-	if payload.admin_code == "IPB_ADMIN_2026":
-		resolved_role = Role.ADMIN
-	elif payload.email.strip().lower().endswith(("@apps.ipb.ac.id", "@ipb.ac.id")):
+	if payload.email.strip().lower().endswith(("@apps.ipb.ac.id", "@ipb.ac.id")):
 		resolved_role = Role.CIVITAS
 
 	user_data = UserEntity(
