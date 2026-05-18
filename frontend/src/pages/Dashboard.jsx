@@ -50,7 +50,7 @@ const Dashboard = () => {
               justifyContent: 'center',
               color: 'var(--ipb-blue)'
             }}>
-               <AlertCircle size={40} />
+              <AlertCircle size={40} />
             </div>
             <div>
               <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>{t('welcomeBack')}, {userName}! 👋</h1>
