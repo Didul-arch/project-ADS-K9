@@ -11,63 +11,69 @@ const History = () => {
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    // 1. Get items from localStorage
+    // 1. Load locally reported items from localStorage
     const stored = localStorage.getItem('reported_items');
-    let itemsList = stored ? JSON.parse(stored) : [];
+    const localOnly = stored ? JSON.parse(stored) : [];
 
-    // 2. If completely empty, let's pre-populate some premium mock records for a perfect initial state!
-    if (itemsList.length === 0) {
-      itemsList = [
-        {
-          id: 1,
-          title: "iPhone 13 Pro Max",
-          category: "Electronics",
-          location: "LSI Library",
-          date: "2024-05-15",
-          type: "lost",
-          image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&q=80&w=400",
-          reporterEmail: "luqman@apps.ipb.ac.id",
-          activityDate: "2024-05-15",
-          activityType: "Reported Lost",
-          activityStatus: "Active"
-        },
-        {
-          id: 2,
-          title: "Black Leather Wallet",
-          category: "Personal Item",
-          location: "Faperta",
-          date: "2024-05-14",
-          type: "lost",
-          image: "https://images.unsplash.com/photo-1627123430984-7151107d3bca?auto=format&fit=crop&q=80&w=400",
-          reporterEmail: "luqman@apps.ipb.ac.id",
-          activityDate: "2024-05-14",
-          activityType: "Reported Lost",
-          activityStatus: "Completed"
-        },
-        {
-          id: 3,
-          title: "Hydro Flask Yellow",
-          category: "Accessories",
-          location: "Gymnasium",
-          date: "2024-05-13",
-          type: "found",
-          image: "https://images.unsplash.com/photo-1602143307185-83e312e4466d?auto=format&fit=crop&q=80&w=400",
-          reporterEmail: "syafiq@apps.ipb.ac.id",
-          activityDate: "2024-05-13",
-          activityType: "Reported Found",
-          activityStatus: "Completed"
-        }
-      ];
-      localStorage.setItem('reported_items', JSON.stringify(itemsList));
-    }
+    // 2. Define the static/default activity history to ensure a beautiful initial state
+    const defaultHistory = [
+      {
+        id: 101,
+        title: "iPhone 13 Pro Max",
+        category: "Electronics",
+        location: "LSI Library",
+        date: "2026-05-15",
+        type: "lost",
+        image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&q=80&w=400",
+        reporterEmail: "luqman@apps.ipb.ac.id",
+        activityDate: "2026-05-15",
+        activityType: "Reported Lost",
+        activityStatus: "Active"
+      },
+      {
+        id: 102,
+        title: "Black Leather Wallet",
+        category: "Personal Item",
+        location: "Faperta",
+        date: "2026-05-14",
+        type: "lost",
+        image: "https://images.unsplash.com/photo-1627123430984-7151107d3bca?auto=format&fit=crop&q=80&w=400",
+        reporterEmail: "luqman@apps.ipb.ac.id",
+        activityDate: "2026-05-14",
+        activityType: "Reported Lost",
+        activityStatus: "Completed"
+      },
+      {
+        id: 103,
+        title: "Hydro Flask Yellow",
+        category: "Accessories",
+        location: "Gymnasium",
+        date: "2026-05-13",
+        type: "found",
+        image: "https://images.unsplash.com/photo-1602143307185-83e312e4466d?auto=format&fit=crop&q=80&w=400",
+        reporterEmail: "syafiq@apps.ipb.ac.id",
+        activityDate: "2026-05-13",
+        activityType: "Reported Found",
+        activityStatus: "Completed"
+      }
+    ];
 
-    // 3. Filter based on the currently logged-in user!
+    // 3. Combine both lists
+    const combinedList = [...localOnly, ...defaultHistory];
+
+    // 4. Filter based on the currently logged-in user!
     if (user) {
-      const userFiltered = itemsList.filter(item => item.reporterEmail === user.email);
+      // Logged-in users see items they reported in local storage or default items with their email
+      const userFiltered = combinedList.filter(item => item.reporterEmail === user.email);
       setHistory(userFiltered);
     } else {
-      // For public guests, show any items reported by guests (no reporterEmail, or marked public)
-      const guestFiltered = itemsList.filter(item => !item.reporterEmail || item.reporterEmail.includes('@') === false || item.reporterEmail === 'Guest');
+      // Guests see items they reported locally on this browser plus default found/guest items
+      const guestFiltered = combinedList.filter(item => 
+        localOnly.some(localItem => localItem.id === item.id) || 
+        !item.reporterEmail || 
+        item.reporterEmail === 'Guest' || 
+        item.reporterEmail.includes('@') === false
+      );
       setHistory(guestFiltered);
     }
   }, [user]);

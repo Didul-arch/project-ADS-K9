@@ -12,7 +12,9 @@ const Detail = () => {
   const { id } = useParams();
   const { t, language } = useLanguage();
   const { user } = useAuth();
-  const item = items.find(i => i.id === parseInt(id));
+  const localReported = JSON.parse(localStorage.getItem('reported_items') || '[]');
+  const allItems = [...items, ...localReported];
+  const item = allItems.find(i => i.id == id);
   
   const [showContactModal, setShowContactModal] = useState(false);
   const [showClaimModal, setShowClaimModal] = useState(false);
@@ -29,7 +31,8 @@ const Detail = () => {
   if (!item) return <div>Item not found</div>;
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(item.contactInfo);
+    const contact = item.contactInfo || item.reporterPhone || item.reporterEmail || 'No contact info';
+    navigator.clipboard.writeText(contact);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -150,7 +153,7 @@ const Detail = () => {
                 </div>
                 <div>
                   <p style={{ fontSize: '12px' }}>{t('reporterLabel')}</p>
-                  <p style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{item.reporter}</p>
+                  <p style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{item.reporter || item.reporterName}</p>
                 </div>
               </div>
             </div>
@@ -198,7 +201,7 @@ const Detail = () => {
           alignItems: 'center',
           marginBottom: '24px'
         }}>
-          <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--ipb-blue)' }}>{item.contactInfo}</span>
+          <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--ipb-blue)' }}>{item.contactInfo || item.reporterPhone || item.reporterEmail || 'No contact info'}</span>
           <button 
             onClick={handleCopy}
             style={{ background: 'white', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}
@@ -209,7 +212,7 @@ const Detail = () => {
         
         <div style={{ display: 'flex', gap: '12px' }}>
           <a 
-            href={getContactLink(item.contactInfo)}
+            href={getContactLink(item.contactInfo || item.reporterPhone || item.reporterEmail)}
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-primary"
