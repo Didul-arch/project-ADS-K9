@@ -393,7 +393,7 @@ const Navbar = ({ title }) => {
                       {user ? user.name : t('guest')}
                     </h4>
                     <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {user ? user.email : 'guest@apps.ipb.ac.id'}
+                      {user ? user.email : (language === 'en' ? 'Browsing as Guest' : 'Menjelajah sebagai Tamu')}
                     </p>
                   </div>
                 </div>
@@ -435,35 +435,98 @@ const Navbar = ({ title }) => {
 
                 <hr style={{ border: 'none', borderTop: '1px solid #E0E5F2', margin: 0 }} />
 
-                {/* Logout Button */}
-                <button 
-                  onClick={() => {
-                    logout();
-                    setShowProfile(false);
-                    navigate('/login');
-                  }}
-                  style={{
-                    background: '#FFE5E5',
-                    border: 'none',
-                    borderRadius: '12px',
-                    color: '#EE5D50',
-                    fontWeight: 700,
-                    fontSize: '13px',
-                    padding: '10px 14px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    width: '100%',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = '#FFD2D2'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = '#FFE5E5'}
-                >
-                  <LogOut size={16} />
-                  {t('signOut')}
-                </button>
+                {/* Conditional CTAs based on login state */}
+                {user ? (
+                  /* Logout Button for Signed-In Users */
+                  <button 
+                    onClick={() => {
+                      logout();
+                      setShowProfile(false);
+                      navigate('/login');
+                    }}
+                    style={{
+                      background: '#FFE5E5',
+                      border: 'none',
+                      borderRadius: '12px',
+                      color: '#EE5D50',
+                      fontWeight: 700,
+                      fontSize: '13px',
+                      padding: '10px 14px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      width: '100%',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#FFD2D2'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#FFE5E5'}
+                  >
+                    <LogOut size={16} />
+                    {t('signOut')}
+                  </button>
+                ) : (
+                  /* Login and Signup Action CTAs for Guests */
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+                    <button 
+                      onClick={() => {
+                        setShowProfile(false);
+                        navigate('/login');
+                      }}
+                      style={{
+                        background: 'var(--ipb-blue)',
+                        border: 'none',
+                        borderRadius: '12px',
+                        color: 'white',
+                        fontWeight: 700,
+                        fontSize: '13px',
+                        padding: '10px 14px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        width: '100%',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(1.1)'}
+                      onMouseLeave={(e) => e.currentTarget.style.filter = 'none'}
+                    >
+                      {t('signIn')}
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setShowProfile(false);
+                        navigate('/signup');
+                      }}
+                      style={{
+                        background: 'white',
+                        border: '1.5px solid var(--ipb-blue)',
+                        borderRadius: '12px',
+                        color: 'var(--ipb-blue)',
+                        fontWeight: 700,
+                        fontSize: '13px',
+                        padding: '10px 14px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        width: '100%',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(0, 117, 255, 0.05)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'white';
+                      }}
+                    >
+                      {t('signUp')}
+                    </button>
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
