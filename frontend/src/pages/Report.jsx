@@ -39,14 +39,14 @@ const Report = () => {
     fileInputRef.current.click();
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Create new reported item object for localStorage persistence
     const newItem = {
       id: Date.now(),
       title: itemName,
-      description,
+      description: description || 'No description provided.',
       category,
       location,
       locationDetail,
@@ -64,7 +64,40 @@ const Report = () => {
       activityStatus: 'Active'
     };
 
-    // Retrieve existing items, add new one, and save back to localStorage
+    // 1. Post to actual FastAPI backend!
+    try {
+      const endpoint = reportType === 'lost' 
+        ? 'http://localhost:8000/items/report-lost' 
+        : 'http://localhost:8000/items/report-found';
+      
+      const payload = {
+        title: itemName,
+        description: description || 'No description provided.',
+        location: location + (locationDetail ? ` - ${locationDetail}` : ''),
+        latitude: null,
+        longitude: null,
+        image: file ? file.name : null,
+        reporter_id: user && user.id ? parseInt(user.id) : 2 // Fallback to user with ID 2 if guest
+      };
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        console.log('Successfully posted reported item to backend DB!');
+      } else {
+        console.error('Failed to post to backend DB:', await response.text());
+      }
+    } catch (err) {
+      console.error('Error reporting to backend DB:', err);
+    }
+
+    // 2. Retrieve existing items, add new one, and save back to localStorage
     const existing = localStorage.getItem('reported_items');
     const itemsList = existing ? JSON.parse(existing) : [];
     itemsList.unshift(newItem);
