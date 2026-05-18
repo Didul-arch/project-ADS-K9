@@ -9,7 +9,7 @@ import ipbLogoWhite from '../assets/ipb-logo-white.png';
 const SignUp = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [adminCode, setAdminCode] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
@@ -21,20 +21,36 @@ const SignUp = () => {
   const { language, toggleLanguage, t } = useLanguage();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Clear previous error
     setErrorMsg('');
 
-    // Password matching validation
+    // 1. Domain verification (Exclusively IPB Apps email)
+    const emailLower = email.trim().toLowerCase();
+    if (!emailLower.endsWith('@apps.ipb.ac.id') && !emailLower.endsWith('@ipb.ac.id')) {
+      setErrorMsg(
+        language === 'en'
+          ? 'Registration is exclusively for IPB Civitas. Public users can report items directly without an account!'
+          : 'Pendaftaran ini khusus untuk Civitas IPB. Pengguna umum dapat langsung melaporkan barang tanpa perlu akun!'
+      );
+      return;
+    }
+
+    // 2. Password matching validation
     if (password !== confirmPassword) {
       setErrorMsg(t('passwordMismatch'));
       return;
     }
 
-    if (signUp(name, email, password, phone)) {
+    const success = await signUp(name, email, password, adminCode);
+    if (success) {
       navigate('/dashboard');
+    } else {
+      setErrorMsg(
+        language === 'en'
+          ? 'Registration failed. Email might already be taken.'
+          : 'Pendaftaran gagal. Email mungkin sudah terdaftar.'
+      );
     }
   };
 
@@ -87,8 +103,14 @@ const SignUp = () => {
         minHeight: 0
       }}>
         <div style={{ marginBottom: '20px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '6px', color: 'var(--text-primary)' }}>{t('signUpGeneralTitle')}</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.4' }}>{t('signUpGeneralDesc')}</p>
+          <h1 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '6px', color: 'var(--ipb-blue)' }}>
+            {language === 'en' ? 'Register IPB Civitas' : 'Daftar Akun Civitas IPB'}
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.4' }}>
+            {language === 'en' 
+              ? 'Exclusively for IPB University students and staff to manage lost and found items.' 
+              : 'Khusus untuk mahasiswa dan staf IPB University untuk mengelola penemuan barang.'}
+          </p>
         </div>
 
         {/* Error Warning Block */}
@@ -130,23 +152,24 @@ const SignUp = () => {
             <input 
               type="email" 
               className="form-input" 
-              placeholder="budi@gmail.com" 
+              placeholder="mail@apps.ipb.ac.id" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required 
             />
           </div>
 
-          {/* WhatsApp / Phone Number */}
+          {/* Admin Referral Code (Optional) */}
           <div className="form-group">
-            <label style={{ fontSize: '14px' }}>{t('phoneLabel')}<span style={{ color: '#4F46E5' }}>*</span></label>
+            <label style={{ fontSize: '14px' }}>
+              {language === 'en' ? 'Admin Secret Code (Optional)' : 'Kode Referal Admin (Opsional)'}
+            </label>
             <input 
-              type="tel" 
+              type="text" 
               className="form-input" 
-              placeholder={t('phonePlaceholder')}
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required 
+              placeholder="e.g. IPB_ADMIN_2026" 
+              value={adminCode}
+              onChange={(e) => setAdminCode(e.target.value)}
             />
           </div>
 

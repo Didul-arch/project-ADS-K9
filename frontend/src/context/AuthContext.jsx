@@ -2,146 +2,119 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const AuthContext = createContext();
 
-// Specific Preset Dummy Profiles as requested
-const dummyUsers = [
-  {
-    email: 'luqman@apps.ipb.ac.id',
-    password: 'luqman123',
-    name: 'luqman',
-    nim: 'g6401231901',
-    role: 'Student', // Civitas IPB User
-    department: 'Ilmu Komputer'
-  },
-  {
-    email: 'naufal@apps.ipb.ac.id',
-    password: 'naufal123',
-    name: 'naufal',
-    nim: 'g6401231902',
-    role: 'Student', // Civitas IPB User
-    department: 'Ilmu Komputer'
-  },
-  {
-    email: 'syafiq@apps.ipb.ac.id',
-    password: 'syafiq123',
-    name: 'syafiq',
-    nim: 'g6401231903',
-    role: 'Admin', // Admin Profile
-    department: 'Keamanan Sistem'
-  }
-];
-
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in (simulation)
+    // Check if user session exists in localStorage
     const savedUser = localStorage.getItem('user');
-    if (savedUser) {
+    const token = localStorage.getItem('token');
+    if (savedUser && token) {
       setUser(JSON.parse(savedUser));
     }
     setLoading(false);
   }, []);
 
-  const login = (email, password) => {
-    const lowerEmail = email.trim().toLowerCase();
+  const login = async (email, password) => {
+    try {
+      const params = new URLSearchParams();
+      params.append('username', email.trim());
+      params.append('password', password);
 
-    // 1. Check in specific Preset Dummy profiles
-    const presetFound = dummyUsers.find(
-      (u) => u.email.toLowerCase() === lowerEmail && u.password === password
-    );
+      const response = await fetch('http://localhost:8000/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params,
+      });
 
-    if (presetFound) {
-      const { password: _, ...userData } = presetFound;
+      if (!response.ok) {
+        return false;
+      }
+
+      const tokenData = await response.json();
+      const token = tokenData.access_token;
+      localStorage.setItem('token', token);
+
+      // Fetch user profile info
+      const meResponse = await fetch('http://localhost:8000/users/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!meResponse.ok) {
+        logout();
+        return false;
+      }
+
+      const dbUser = await meResponse.json();
+      
+      // Map backend role enum to frontend roles:
+      // Backend: 'admin', 'civitas', 'umum'
+      // Frontend expects: 'Admin', 'Student'
+      const mappedRole = dbUser.role === 'admin' ? 'Admin' : 'Student';
+
+      const userData = {
+        id: dbUser.id,
+        email: dbUser.email,
+        name: dbUser.fullname,
+        role: mappedRole,
+        nim: dbUser.email.endsWith('@apps.ipb.ac.id') 
+          ? 'G64' + Math.floor(1000000 + Math.random() * 9000000)
+          : '',
+        department: dbUser.role === 'admin' ? 'Direktorat Sistem Informasi' : 'Ilmu Komputer'
+      };
+
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
       return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-
-    // 2. Check in newly registered users in LocalStorage
-    const localUsers = JSON.parse(localStorage.getItem('registered_users') || '[]');
-    const localFound = localUsers.find(
-      (u) => u.email.toLowerCase() === lowerEmail && u.password === password
-    );
-
-    if (localFound) {
-      const { password: _, ...userData } = localFound;
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      return true;
-    }
-
-    return false; // Authentication failed (wrong credentials)
-  };
-
-  const loginWithGoogle = (role = 'User') => {
-    // Retain legacy simulated Google login safely
-    const userData = { 
-      email: role === 'Admin' ? 'syafiq@apps.ipb.ac.id' : 'luqman@apps.ipb.ac.id', 
-      name: role === 'Admin' ? 'syafiq' : 'luqman', 
-      role: role === 'Admin' ? 'Admin' : 'Student', 
-      nim: role === 'Admin' ? 'g6401231903' : 'g6401231901',
-      department: 'Ilmu Komputer'
-    };
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-    return true;
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
   };
 
-  const signUp = (name, email, password, phone) => {
-    const lowerEmail = email.trim().toLowerCase();
-    
-    // Check for duplicates
-    const isPreset = dummyUsers.some((u) => u.email.toLowerCase() === lowerEmail);
-    const localUsers = JSON.parse(localStorage.getItem('registered_users') || '[]');
-    const isLocal = localUsers.some((u) => u.email.toLowerCase() === lowerEmail);
+  const signUp = async (name, email, password, adminCode) => {
+    try {
+      const response = await fetch('http://localhost:8000/users/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          fullname: name,
+          password: password,
+          admin_code: adminCode || null
+        }),
+      });
 
-    if (isPreset || isLocal) {
-      return false; // Email already taken
-    }
+      if (!response.ok) {
+        return false;
+      }
 
-    // Register a new General Public (Non-IPB) account
-    const newRegister = {
-      name,
-      email: lowerEmail,
-      password,
-      phone: phone || '+6281234567890',
-      role: 'User', // Exclusively registered as General User
-      department: 'Umum / Non-IPB'
-    };
-
-    localUsers.push(newRegister);
-    localStorage.setItem('registered_users', JSON.stringify(localUsers));
-
-    // Log the user in immediately
-    const { password: _, ...userData } = newRegister;
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-    return true;
-  };
-
-  const switchRole = (newRole) => {
-    if (user) {
-      const updatedUser = { 
-        ...user, 
-        role: newRole,
-        name: newRole === 'Admin' ? 'syafiq' : 'luqman',
-        email: newRole === 'Admin' ? 'syafiq@apps.ipb.ac.id' : 'luqman@apps.ipb.ac.id',
-        nim: newRole === 'Admin' ? 'g6401231903' : 'g6401231901',
-        department: 'Ilmu Komputer'
-      };
-      setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      // Automatically log the user in after successful sign up
+      return await login(email, password);
+    } catch (error) {
+      console.error('SignUp error:', error);
+      return false;
     }
   };
+
+  // Backward compatible stub
+  const switchRole = () => {};
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, signUp, loginWithGoogle, switchRole, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, signUp, switchRole, loading }}>
       {children}
     </AuthContext.Provider>
   );

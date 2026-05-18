@@ -1,14 +1,32 @@
 import React, { useState, useRef } from 'react';
 import Navbar from '../components/Navbar';
-import { Upload, CheckCircle, FileText } from 'lucide-react';
+import { Upload, CheckCircle, FileText, ShieldCheck } from 'lucide-react';
 import { categories, locations } from '../data/mockData';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 const Report = () => {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
+  const { user } = useAuth();
+  
   const [submitted, setSubmitted] = useState(false);
   const [file, setFile] = useState(null);
+  
+  // Public user fields
+  const [publicName, setPublicName] = useState('');
+  const [publicEmail, setPublicEmail] = useState('');
+  const [publicWhatsApp, setPublicWhatsApp] = useState('');
+
+  // Item form fields
+  const [itemName, setItemName] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('');
+  const [location, setLocation] = useState('');
+  const [locationDetail, setLocationDetail] = useState('');
+  const [date, setDate] = useState('');
+  const [reportType, setReportType] = useState('lost');
+
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
@@ -23,7 +41,47 @@ const Report = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Package report data beautifully for API consumption or local handling
+    const reportData = {
+      itemName,
+      description,
+      category,
+      location,
+      locationDetail,
+      date,
+      reportType,
+      file: file ? file.name : null,
+      reporter: user ? {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      } : {
+        name: publicName,
+        email: publicEmail,
+        whatsapp: publicWhatsApp,
+        role: 'Public / Non-IPB'
+      }
+    };
+
+    console.log('Submitted Report Payload:', reportData);
     setSubmitted(true);
+  };
+
+  const resetForm = () => {
+    setItemName('');
+    setDescription('');
+    setCategory('');
+    setLocation('');
+    setLocationDetail('');
+    setDate('');
+    setReportType('lost');
+    setFile(null);
+    setPublicName('');
+    setPublicEmail('');
+    setPublicWhatsApp('');
+    setSubmitted(false);
   };
 
   if (submitted) {
@@ -39,7 +97,7 @@ const Report = () => {
         </motion.div>
         <h2 style={{ marginBottom: '12px' }}>{t('successMsg')}</h2>
         <p style={{ marginBottom: '30px', textAlign: 'center' }}>{t('successDesc')}</p>
-        <button className="btn btn-primary" onClick={() => setSubmitted(false)}>{t('createAnother')}</button>
+        <button className="btn btn-primary" onClick={resetForm}>{t('createAnother')}</button>
       </div>
     );
   }
@@ -68,17 +126,36 @@ const Report = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginBottom: '30px' }}>
             <div className="form-group">
               <label>{t('itemName')} <span style={{ color: '#EE5D50' }}>*</span></label>
-              <input type="text" className="form-input" placeholder={t('itemNamePlaceholder')} required />
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder={t('itemNamePlaceholder')} 
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+                required 
+              />
             </div>
 
             <div className="form-group">
               <label>{t('description')} <span style={{ color: '#EE5D50' }}>*</span></label>
-              <input type="text" className="form-input" placeholder={t('descriptionPlaceholder')} required />
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder={t('descriptionPlaceholder')} 
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                required 
+              />
             </div>
 
             <div className="form-group">
               <label>{t('category')} <span style={{ color: '#EE5D50' }}>*</span></label>
-              <select className="form-input" required>
+              <select 
+                className="form-input" 
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                required
+              >
                 <option value="">{t('selectCategory')}</option>
                 {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
               </select>
@@ -86,7 +163,12 @@ const Report = () => {
 
             <div className="form-group">
               <label>{t('location')} <span style={{ color: '#EE5D50' }}>*</span></label>
-              <select className="form-input" required>
+              <select 
+                className="form-input" 
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                required
+              >
                 <option value="">{t('selectLocation')}</option>
                 {locations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
               </select>
@@ -94,26 +176,124 @@ const Report = () => {
 
             <div className="form-group">
               <label>{t('locationDetail')} <span style={{ color: '#EE5D50' }}>*</span></label>
-              <input type="text" className="form-input" placeholder={t('locationDetailPlaceholder')} required />
-            </div>
-
-            <div className="form-group">
-              <label>{t('contactInfo')} <span style={{ color: '#EE5D50' }}>*</span></label>
-              <input type="text" className="form-input" placeholder={t('contactInfoPlaceholder')} required />
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder={t('locationDetailPlaceholder')} 
+                value={locationDetail}
+                onChange={(e) => setLocationDetail(e.target.value)}
+                required 
+              />
             </div>
 
             <div className="form-group">
               <label>{t('date')} <span style={{ color: '#EE5D50' }}>*</span></label>
-              <input type="date" className="form-input" required />
+              <input 
+                type="date" 
+                className="form-input" 
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required 
+              />
             </div>
 
-            <div className="form-group">
+            <div className="form-group" style={{ gridColumn: 'span 2' }}>
               <label>{t('type')} <span style={{ color: '#EE5D50' }}>*</span></label>
-              <select className="form-input" required>
+              <select 
+                className="form-input" 
+                value={reportType}
+                onChange={(e) => setReportType(e.target.value)}
+                required
+              >
                 <option value="lost">{t('lostSomething')}</option>
                 <option value="found">{t('foundSomething')}</option>
               </select>
             </div>
+
+            {/* Conditional Frictionless Contact Block */}
+            {user ? (
+              <div style={{
+                gridColumn: '1 / -1',
+                background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%)',
+                border: '1.5px solid rgba(79, 70, 229, 0.15)',
+                borderRadius: '16px',
+                padding: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                marginBottom: '10px'
+              }}>
+                <div style={{ background: '#4F46E5', color: 'white', padding: '10px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <ShieldCheck size={22} />
+                </div>
+                <div>
+                  <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', color: '#4F46E5', fontWeight: 700 }}>
+                    {language === 'en' ? 'Verified Session Active' : 'Sesi Terverifikasi Aktif'}
+                  </h4>
+                  <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)' }}>
+                    {language === 'en' 
+                      ? `Reporting as ${user.name} (${user.role === 'Admin' ? 'Administrator' : 'IPB Student'})`
+                      : `Melaporkan sebagai ${user.name} (${user.role === 'Admin' ? 'Administrator' : 'Mahasiswa IPB'})`}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div style={{
+                gridColumn: '1 / -1',
+                background: '#F4F7FE',
+                borderRadius: '20px',
+                padding: '24px',
+                border: '1px solid #E0E5F2',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+                marginBottom: '10px'
+              }}>
+                <h4 style={{ margin: 0, fontSize: '16px', color: 'var(--ipb-blue)', fontWeight: 700 }}>
+                  {language === 'en' ? 'Reporter Contact Details (Public / Non-IPB)' : 'Detail Kontak Pelapor (Umum / Non-IPB)'}
+                </h4>
+                <p style={{ margin: '0 0 10px 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  {language === 'en' 
+                    ? 'No account needed! Fill out your contact details to receive claim updates.'
+                    : 'Tidak perlu akun! Isi detail kontak Anda agar dapat menerima pembaruan klaim.'}
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label style={{ fontSize: '13px' }}>{t('nameLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      placeholder={t('namePlaceholder')} 
+                      value={publicName}
+                      onChange={(e) => setPublicName(e.target.value)}
+                      required={!user} 
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label style={{ fontSize: '13px' }}>{t('emailLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
+                    <input 
+                      type="email" 
+                      className="form-input" 
+                      placeholder="mail@example.com" 
+                      value={publicEmail}
+                      onChange={(e) => setPublicEmail(e.target.value)}
+                      required={!user} 
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label style={{ fontSize: '13px' }}>{t('phoneLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
+                    <input 
+                      type="tel" 
+                      className="form-input" 
+                      placeholder="+62..." 
+                      value={publicWhatsApp}
+                      onChange={(e) => setPublicWhatsApp(e.target.value)}
+                      required={!user} 
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="form-group" style={{ marginBottom: '40px' }}>

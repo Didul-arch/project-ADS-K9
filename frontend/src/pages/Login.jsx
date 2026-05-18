@@ -10,7 +10,6 @@ const Login = () => {
   // Prefill with Luqman's credentials by default for perfect developer experience
   const [email, setEmail] = useState('luqman@apps.ipb.ac.id');
   const [password, setPassword] = useState('luqman123');
-  const [role, setRole] = useState('User'); // Toggle state for simulation
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   
@@ -18,27 +17,15 @@ const Login = () => {
   const { language, toggleLanguage, t } = useLanguage();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
     
-    // Call our refined simulated login with real password matching
-    if (login(email, password)) {
+    const success = await login(email, password);
+    if (success) {
       navigate('/dashboard');
     } else {
       setErrorMsg(t('invalidCredentials'));
-    }
-  };
-
-  const handleRoleToggle = (selectedRole) => {
-    setRole(selectedRole);
-    setErrorMsg('');
-    if (selectedRole === 'User') {
-      setEmail('luqman@apps.ipb.ac.id');
-      setPassword('luqman123');
-    } else {
-      setEmail('syafiq@apps.ipb.ac.id');
-      setPassword('syafiq123');
     }
   };
 
@@ -115,46 +102,6 @@ const Login = () => {
           </div>
         )}
 
-        {/* Sliding Role Selector to prefill developer credentials */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', background: '#F4F7FE', padding: '6px', borderRadius: '12px' }}>
-          <button 
-            type="button"
-            onClick={() => handleRoleToggle('User')}
-            style={{ 
-              flex: 1, 
-              padding: '10px', 
-              borderRadius: '8px', 
-              border: 'none',
-              background: role === 'User' ? 'white' : 'transparent',
-              boxShadow: role === 'User' ? '0px 4px 10px rgba(0,0,0,0.05)' : 'none',
-              fontWeight: '600',
-              cursor: 'pointer',
-              color: role === 'User' ? 'var(--ipb-blue)' : 'var(--text-secondary)',
-              transition: 'all 0.25s ease'
-            }}
-          >
-            User
-          </button>
-          <button 
-            type="button"
-            onClick={() => handleRoleToggle('Admin')}
-            style={{ 
-              flex: 1, 
-              padding: '10px', 
-              borderRadius: '8px', 
-              border: 'none',
-              background: role === 'Admin' ? 'white' : 'transparent',
-              boxShadow: role === 'Admin' ? '0px 4px 10px rgba(0,0,0,0.05)' : 'none',
-              fontWeight: '600',
-              cursor: 'pointer',
-              color: role === 'Admin' ? 'var(--ipb-blue)' : 'var(--text-secondary)',
-              transition: 'all 0.25s ease'
-            }}
-          >
-            Admin
-          </button>
-        </div>
-
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label style={{ fontSize: '14px' }}>{t('emailLabel')}<span style={{ color: '#4F46E5' }}>*</span></label>
@@ -205,6 +152,13 @@ const Login = () => {
         <p style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px', color: 'var(--text-secondary)' }}>
           {t('notRegistered')} <Link to="/signup" style={{ color: '#4F46E5', fontWeight: '700' }}>{t('createAccount')}</Link>
         </p>
+
+        {/* Discreet Dev Tools Autofill */}
+        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+          Dev Autofills: 
+          <button type="button" onClick={() => { setEmail('luqman@apps.ipb.ac.id'); setPassword('luqman123'); }} style={{ background: 'none', border: 'none', color: '#4F46E5', cursor: 'pointer', margin: '0 6px', fontWeight: 600, textDecoration: 'underline' }}>Luqman (Student)</button> |
+          <button type="button" onClick={() => { setEmail('syafiq@apps.ipb.ac.id'); setPassword('syafiq123'); }} style={{ background: 'none', border: 'none', color: '#4F46E5', cursor: 'pointer', margin: '0 6px', fontWeight: 600, textDecoration: 'underline' }}>Syafiq (Admin)</button>
+        </div>
       </div>
 
       {/* Right Column: Visual */}
