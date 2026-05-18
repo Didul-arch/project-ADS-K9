@@ -1,40 +1,48 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import SidebarUser from "./components/SidebarUser";
-import Header from "./components/Header";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Sidebar from './components/Sidebar';
+import Dashboard from './pages/Dashboard';
+import Browse from './pages/Browse';
+import Report from './pages/Report';
+import Detail from './pages/Detail';
+import History from './pages/History';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import SignUp from './pages/SignUp';
+import { LanguageProvider } from './context/LanguageContext';
+import { AuthProvider } from './context/AuthContext';
+import { SearchProvider } from './context/SearchContext';
 
-import Browse from "./pages/Browse";
-import Claims from "./pages/Claims";
-import Dashboard from "./pages/Dashboard";
-import Home from "./pages/Home";
-import Report from "./pages/Report";
-
-const MainLayout = ({ children }) => {
+function App() {
   return (
-    <div className="flex min-h-screen bg-[#FAF8FF]">
-      <SidebarUser />
-      <main className="flex-1 overflow-y-auto flex flex-col">
-        <Header />
-        {children}
-      </main>
-    </div>
+    <AuthProvider>
+      <SearchProvider>
+        <LanguageProvider>
+          <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/*" element={
+              <div className="app-container">
+                <Sidebar />
+                <main className="main-content">
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/browse" element={<Browse />} />
+                    <Route path="/report" element={<Report />} />
+                    <Route path="/detail/:id" element={<Detail />} />
+                    <Route path="/history" element={<History />} />
+                  </Routes>
+                </main>
+              </div>
+            } />
+          </Routes>
+        </Router>
+      </LanguageProvider>
+    </SearchProvider>
+  </AuthProvider>
   );
-};
-
-const App = () => {
-  return (
-    <BrowserRouter>
-      <MainLayout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/browse" element={<Browse />} />
-          <Route path="/claims" element={<Claims />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/report" element={<Report />} />
-        </Routes>
-      </MainLayout>
-    </BrowserRouter>
-  );
-};
+}
 
 export default App;

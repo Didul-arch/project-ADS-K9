@@ -11,29 +11,36 @@ from app.infrastructure.auth.utils import get_password_hash
 
 async def seed_data():
     async with engine.begin() as conn:
-        print("🧹 Reset database schema...")
+        print("[DB] Reset database schema...")
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
     async with AsyncSessionLocal() as session:
         async with session.begin():
-            print("🌱 Memulai seeding data...")
+            print("[SEED] Memulai seeding data...")
 
             user1 = UserModel(
-                email="didul@apps.ipb.ac.id",
-                full_name="Syafiq Syadidul Azmi",
+                email="luqman@apps.ipb.ac.id",
+                full_name="Luqman",
                 is_active=True,
-                password_hash=get_password_hash("didul123"),
+                password_hash=get_password_hash("luqman123"),
                 role=Role.CIVITAS,
             )
             user2 = UserModel(
-                email="budi@apps.ipb.ac.id",
-                full_name="Budi Budiman",
+                email="naufal@apps.ipb.ac.id",
+                full_name="Naufal",
                 is_active=True,
-                password_hash=get_password_hash("budi123"),
+                password_hash=get_password_hash("naufal123"),
                 role=Role.CIVITAS,
             )
-            session.add_all([user1, user2])
+            user3 = UserModel(
+                email="syafiq@apps.ipb.ac.id",
+                full_name="Syafiq",
+                is_active=True,
+                password_hash=get_password_hash("syafiq123"),
+                role=Role.ADMIN,
+            )
+            session.add_all([user1, user2, user3])
 
             await session.flush()
 
@@ -63,10 +70,10 @@ async def seed_data():
 
             session.add_all([item1, item2])
 
-        print("✅ Seeding selesai! Database sudah di-reset dan diisi ulang dari nol.")
+        print("[SUCCESS] Seeding selesai! Database sudah di-reset dan diisi ulang dari nol.")
 
 if __name__ == "__main__":
     try:
         asyncio.run(seed_data())
     except Exception as e:
-        print(f"❌ Waduh gagal seed, Dul! Error: {e}")
+        print(f"[ERROR] Waduh gagal seed, Dul! Error: {e}")

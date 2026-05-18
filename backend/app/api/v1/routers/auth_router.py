@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.schemas.user_schema import CreateUserRequest, UserResponse
 from app.api.v1.schemas.auth_schema import Token
-from app.domains.user.entity import UserEntity
+from app.domains.user.entity import UserEntity, Role
 from app.domains.user.service import UserService
 from app.infrastructure.db.session import get_db
 from app.infrastructure.repositories.user_repository import UserRepository
@@ -21,10 +21,18 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 async def create_user(payload: CreateUserRequest, db: AsyncSession = Depends(get_db)):
 	repo = UserRepository(db)
 	service = UserService(repo)
+	
+	resolved_role = Role.UMUM
+	if payload.admin_code == "IPB_ADMIN_2026":
+		resolved_role = Role.ADMIN
+	elif payload.email.strip().lower().endswith(("@apps.ipb.ac.id", "@ipb.ac.id")):
+		resolved_role = Role.CIVITAS
+
 	user_data = UserEntity(
 		email=payload.email,
 		fullname=payload.fullname,
 		password_hashed=auth_utils.get_password_hash(payload.password),
+		role=resolved_role,
 		is_active=True,
 	)
 	created_user = await service.create_user(user_data)
@@ -64,4 +72,4 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
 async def read_users_me(current_user: UserEntity = Depends(get_current_user)):
 	if current_user.id is None:
 		raise HTTPException(status_code=500, detail="User id missing")
-	return UserResponse(id=current_user.id, email=current_user.email, fullname=current_user.fullname, is_active=current_user.is_active)
+	return UserResponse(id=current_user.id, email=current_user.email, fullname=current_user.fullname, is_active=current_user.is_active, role=current_user.role)
