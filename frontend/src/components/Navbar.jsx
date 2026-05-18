@@ -412,23 +412,26 @@ const Navbar = ({ title }) => {
                   {user ? user.role : t('guest')}
                 </div>
 
-                <hr style={{ border: 'none', borderTop: '1px solid #E0E5F2', margin: 0 }} />
-
-                {/* Additional Profile Info */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                    <span style={{ color: 'var(--text-secondary)' }}>{t('studentId')}</span>
-                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                      {user && user.role === 'Admin' ? 'A24090001' : 'G6401221034'}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                    <span style={{ color: 'var(--text-secondary)' }}>{t('department')}</span>
-                    <span style={{ fontWeight: 600, color: 'var(--text-primary)', textAlign: 'right', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {user && user.role === 'Admin' ? 'Direktorat Sistem Informasi' : 'Ilmu Komputer'}
-                    </span>
-                  </div>
-                </div>
+                {/* Additional Profile Info (Only shown for logged-in IPB/Civitas/Admin users) */}
+                {user && (
+                  <>
+                    <hr style={{ border: 'none', borderTop: '1px solid #E0E5F2', margin: 0 }} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>{t('studentId')}</span>
+                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                          {user.role === 'Admin' ? 'A24090001' : (user.nim || 'G6401221034')}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>{t('department')}</span>
+                        <span style={{ fontWeight: 600, color: 'var(--text-primary)', textAlign: 'right', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {user.role === 'Admin' ? 'Direktorat Sistem Informasi' : (user.department || 'Ilmu Komputer')}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <hr style={{ border: 'none', borderTop: '1px solid #E0E5F2', margin: 0 }} />
 
