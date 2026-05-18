@@ -42,30 +42,35 @@ const Report = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Package report data beautifully for API consumption or local handling
-    const reportData = {
-      itemName,
+    // Create new reported item object for localStorage persistence
+    const newItem = {
+      id: Date.now(),
+      title: itemName,
       description,
       category,
       location,
       locationDetail,
       date,
-      reportType,
-      file: file ? file.name : null,
-      reporter: user ? {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      } : {
-        name: publicName,
-        email: publicEmail,
-        whatsapp: publicWhatsApp,
-        role: 'Public / Non-IPB'
-      }
+      type: reportType,
+      status: reportType === 'lost' ? 'Lost' : 'Found',
+      image: file 
+        ? URL.createObjectURL(file) 
+        : 'https://images.unsplash.com/photo-1540553016722-983e48a2cd10?auto=format&fit=crop&q=80&w=400',
+      reporterEmail: user ? user.email : publicEmail,
+      reporterName: user ? user.name : publicName,
+      reporterPhone: user ? '' : publicWhatsApp,
+      activityDate: date,
+      activityType: reportType === 'lost' ? 'Reported Lost' : 'Reported Found',
+      activityStatus: 'Active'
     };
 
-    console.log('Submitted Report Payload:', reportData);
+    // Retrieve existing items, add new one, and save back to localStorage
+    const existing = localStorage.getItem('reported_items');
+    const itemsList = existing ? JSON.parse(existing) : [];
+    itemsList.unshift(newItem);
+    localStorage.setItem('reported_items', JSON.stringify(itemsList));
+
+    console.log('Saved Report to LocalStorage:', newItem);
     setSubmitted(true);
   };
 
