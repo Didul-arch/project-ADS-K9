@@ -67,8 +67,8 @@ const Report = () => {
     // 1. Post to actual FastAPI backend!
     try {
       const endpoint = reportType === 'lost' 
-        ? 'http://localhost:8000/items/report-lost' 
-        : 'http://localhost:8000/items/report-found';
+        ? 'http://localhost:8080/items/report-lost' 
+        : 'http://localhost:8080/items/report-found';
       
       const payload = {
         title: itemName,
