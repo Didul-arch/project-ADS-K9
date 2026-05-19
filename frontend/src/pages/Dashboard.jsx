@@ -1,38 +1,89 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Navbar from '../components/Navbar';
 import StatCard from '../components/StatCard';
 import ItemCard from '../components/ItemCard';
-import { Search, AlertCircle, CheckCircle, Package } from 'lucide-react';
-import { items, stats } from '../data/mockData';
+import { Search, AlertCircle, CheckCircle, Package, ShieldCheck, XCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useLanguage } from '../context/LanguageContext';
-
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useItems } from '../context/ItemsContext';
+import { apiJson } from '../lib/api';
 
 const Dashboard = () => {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+  const { items } = useItems();
+  const [claims, setClaims] = useState([]);
+  const [claimsLoading, setClaimsLoading] = useState(false);
+  const [reviewingId, setReviewingId] = useState(null);
+
   const isAdmin = user?.role === 'Admin';
 
-  // Load localStorage reported items
-  const localReported = JSON.parse(localStorage.getItem('reported_items') || '[]');
-  const allItems = [...localReported, ...items];
-  const recentItems = allItems.slice(0, 3);
-
-  // Load local notifications count
-  const localNotifs = JSON.parse(localStorage.getItem('notifications') || '[]');
-  const unreadNotifCount = localNotifs.filter(n => !n.read).length + 3; // base 3 mocks
-
-  // Calculate dynamic stats
-  const userReports = localReported.filter(item => item.reporterEmail === user?.email);
-  const totalUserReportsCount = userReports.length + 3; // base 3 mocks
-  const foundItemsCount = userReports.filter(item => item.type === 'found').length + 1; // base 1 mock
-  const matchesCount = userReports.filter(item => item.status === 'Matched').length + 2; // base 2 mocks
-
-  // Capitalize the first letter of user's name dynamically for high visual polish
-  const userName = user?.name 
-    ? user.name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+  const userName = user?.name
+    ? user.name.split(' ').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
     : 'User';
+
+  const itemById = useMemo(() => {
+    return new Map(items.map((item) => [item.id, item]));
+  }, [items]);
+
+  const recentItems = items.slice(0, 3);
+  const userReports = user ? items.filter((item) => item.reporterId === user.id) : [];
+
+  const pendingClaims = claims.filter((claim) => claim.status === 'pending');
+  const approvedClaims = claims.filter((claim) => claim.status === 'approved');
+  const rejectedClaims = claims.filter((claim) => claim.status === 'rejected');
+
+  const fetchClaims = async () => {
+    if (!token) return;
+    setClaimsLoading(true);
+    try {
+      const res = await apiJson('/claims/?limit=100', { token });
+      if (res.ok && res.data?.data) {
+        setClaims(res.data.data);
+      } else {
+        setClaims([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch claims:', error);
+      setClaims([]);
+    } finally {
+      setClaimsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchClaims();
+    }
+  }, [isAdmin, token]);
+
+  const reviewClaim = async (claimId, status) => {
+    if (!token) return;
+    setReviewingId(claimId);
+    try {
+      const res = await apiJson(`/claims/${claimId}/review`, {
+        method: 'PATCH',
+        body: { status },
+        token,
+      });
+      if (res.ok) {
+        await fetchClaims();
+      } else {
+        console.error('Failed to review claim:', res);
+      }
+    } catch (error) {
+      console.error('Failed to review claim:', error);
+    } finally {
+      setReviewingId(null);
+    }
+  };
+
+  const getClaimImageUrl = (proofImage) => {
+    if (!proofImage) return '';
+    const baseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+    return `${baseUrl}${proofImage}`;
+  };
 
   return (
     <motion.div
@@ -43,7 +94,6 @@ const Dashboard = () => {
       <Navbar title={isAdmin ? 'Admin Dashboard' : t('dashboard')} />
 
       {isAdmin ? (
-        /* Admin Dashboard View */
         <>
           <div className="glass card-shadow" style={{
             background: 'white',
@@ -68,10 +118,7 @@ const Dashboard = () => {
             </div>
             <div>
               <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>{t('welcomeBack')}, {userName}! 👋</h1>
-              <p>There are <strong>12 pending claims</strong> that require your immediate verification.</p>
-            </div>
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px' }}>
-              <button className="btn btn-primary">Review All Claims</button>
+              <p>{pendingClaims.length} pending claims require your review.</p>
             </div>
           </div>
 
@@ -81,14 +128,80 @@ const Dashboard = () => {
             gap: '24px',
             marginBottom: '40px'
           }}>
-            <StatCard label="Total Reports" value="142" icon={<Package size={24} />} />
-            <StatCard label="Active Items" value="45" icon={<Search size={24} />} color="#0075FF" />
-            <StatCard label="Resolved" value="97" icon={<CheckCircle size={24} />} color="#01B574" />
-            <StatCard label="Total Users" value="1,204" icon={<AlertCircle size={24} />} color="#EE5D50" />
+            <StatCard label="Total Reports" value={items.length.toString()} icon={<Package size={24} />} />
+            <StatCard label="Pending Claims" value={pendingClaims.length.toString()} icon={<ShieldCheck size={24} />} color="#0075FF" />
+            <StatCard label="Approved Claims" value={approvedClaims.length.toString()} icon={<CheckCircle size={24} />} color="#01B574" />
+            <StatCard label="Rejected Claims" value={rejectedClaims.length.toString()} icon={<XCircle size={24} />} color="#EE5D50" />
+          </div>
+
+          <div className="glass card-shadow" style={{ background: 'white', padding: '30px', borderRadius: '24px', marginBottom: '40px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ margin: 0 }}>Claims Queue</h2>
+              <button className="btn" onClick={fetchClaims} disabled={claimsLoading}>
+                {claimsLoading ? 'Refreshing...' : 'Refresh'}
+              </button>
+            </div>
+
+            {claimsLoading ? (
+              <p style={{ color: 'var(--text-secondary)' }}>Loading claims...</p>
+            ) : claims.length === 0 ? (
+              <p style={{ color: 'var(--text-secondary)' }}>No claims yet.</p>
+            ) : (
+              <div style={{ display: 'grid', gap: '16px' }}>
+                {claims.map((claim) => {
+                  const relatedItem = itemById.get(claim.item_id);
+                  const imageUrl = getClaimImageUrl(claim.proof_image);
+                  return (
+                    <div key={claim.id} style={{ border: '1px solid #E0E5F2', borderRadius: '18px', padding: '18px', background: '#FDFEFF' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', marginBottom: '12px' }}>
+                        <div>
+                          <h3 style={{ margin: 0, marginBottom: '6px' }}>{relatedItem?.title || `Item #${claim.item_id}`}</h3>
+                          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '13px' }}>
+                            Claim by user #{claim.claimer_id} · Status: {claim.status}
+                          </p>
+                        </div>
+                        <span className="badge badge-found" style={{ alignSelf: 'start' }}>{claim.status}</span>
+                      </div>
+
+                      <p style={{ margin: '0 0 12px 0', color: 'var(--text-primary)' }}>{claim.proof_text}</p>
+
+                      {imageUrl && (
+                        <a href={imageUrl} target="_blank" rel="noreferrer" style={{ display: 'inline-block', marginBottom: '12px' }}>
+                          <img
+                            src={imageUrl}
+                            alt="claim proof"
+                            style={{ width: '100%', maxWidth: '280px', borderRadius: '14px', border: '1px solid #E0E5F2', objectFit: 'cover' }}
+                          />
+                        </a>
+                      )}
+
+                      {claim.status === 'pending' && (
+                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                          <button
+                            className="btn btn-primary"
+                            disabled={reviewingId === claim.id}
+                            onClick={() => reviewClaim(claim.id, 'approved')}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            className="btn"
+                            style={{ background: '#F4F7FE', color: 'var(--text-secondary)' }}
+                            disabled={reviewingId === claim.id}
+                            onClick={() => reviewClaim(claim.id, 'rejected')}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </>
       ) : (
-        /* User Dashboard View (Existing) */
         <>
           <div className="glass card-shadow" style={{
             background: 'white',
@@ -109,14 +222,11 @@ const Dashboard = () => {
               justifyContent: 'center',
               color: 'white'
             }}>
-               <CheckCircle size={40} />
+              <CheckCircle size={40} />
             </div>
             <div>
               <h1 style={{ fontSize: '28px', marginBottom: '8px' }}>{t('welcomeBack')}, {userName}! 👋</h1>
-              <p>{t('activeReportsMsg', { count: totalUserReportsCount, notif: unreadNotifCount })}</p>
-            </div>
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px' }}>
-              <button className="btn btn-primary">{t('manageReports')}</button>
+              <p>{t('activeReportsMsg', { count: userReports.length, notif: 0 })}</p>
             </div>
           </div>
 
@@ -126,15 +236,14 @@ const Dashboard = () => {
             gap: '24px',
             marginBottom: '40px'
           }}>
-            <StatCard label={t('yourReports')} value={totalUserReportsCount.toString()} icon={<Package size={24} />} />
-            <StatCard label={t('foundItems')} value={foundItemsCount.toString()} icon={<CheckCircle size={24} />} color="#01B574" />
-            <StatCard label={t('matchesFound')} value={matchesCount.toString()} icon={<AlertCircle size={24} />} color="#0075FF" />
+            <StatCard label={t('yourReports')} value={userReports.length.toString()} icon={<Package size={24} />} />
+            <StatCard label={t('foundItems')} value={userReports.filter((item) => item.type === 'found').length.toString()} icon={<CheckCircle size={24} />} color="#01B574" />
+            <StatCard label={t('matchesFound')} value={items.filter((item) => item.type === 'found').length.toString()} icon={<AlertCircle size={24} />} color="#0075FF" />
             <StatCard label={t('profileCompletion')} value="85%" icon={<Search size={24} />} color="#EE5D50" />
           </div>
         </>
       )}
 
-      {/* Recent Items */}
       <div style={{ marginBottom: '40px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <h2>Recently Reported</h2>

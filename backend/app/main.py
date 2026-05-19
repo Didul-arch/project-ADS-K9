@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
 import time
+from pathlib import Path
 
 # Import Infrastruktur (Database & Session)
 from app.infrastructure.db.session import engine, Base
@@ -7,15 +9,20 @@ from app.api.v1.routers.auth_router import router as auth_router
 from app.api.v1.routers.claim_router import router as claim_router
 from app.api.v1.routers.item_router import router as item_router
 from app.api.v1.routers.user_router import router as user_router
+from app.infrastructure.config.settings import settings
 
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="Lost & Found IPB")
+app.mount("/storage", StaticFiles(directory="storage"), name="storage")
 
 # Enable CORS for cross-origin API calls from the React frontend port
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,6 +43,7 @@ async def add_process_time_header(request: Request, call_next):
 
 @app.on_event("startup")
 async def startup():
+    Path(settings.CLAIM_UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     print("Tables Synced!")

@@ -6,14 +6,13 @@ import { Filter, Search } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { useSearch } from "../context/SearchContext";
+import { useItems } from "../context/ItemsContext";
 
 const Browse = () => {
   const [filter, setFilter] = useState("all");
   const [category, setCategory] = useState("all");
   const { searchQuery, setSearchQuery } = useSearch();
-
-  const localReported = JSON.parse(localStorage.getItem('reported_items') || '[]');
-  const allItems = [...localReported, ...items];
+  const { items: allItems, loading } = useItems();
 
   const filteredItems = allItems.filter((item) => {
     const matchesType = filter === "all" || item.type === filter;

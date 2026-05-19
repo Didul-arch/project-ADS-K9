@@ -1,33 +1,66 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Modal from '../components/Modal';
-import { items } from '../data/mockData';
-import { MapPin, Calendar, Tag, User, ArrowLeft, MessageCircle, ShieldCheck, Copy, Check } from 'lucide-react';
+import { MapPin, Calendar, Tag, User, ArrowLeft, MessageCircle, Copy, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
+import { apiJson } from '../lib/api';
 
 const Detail = () => {
   const { id } = useParams();
   const { t } = useLanguage();
-  const item = items.find(i => i.id === parseInt(id));
-  
-  const [showContactModal, setShowContactModal] = useState(false);
-  const [showClaimModal, setShowClaimModal] = useState(false);
-  const [claimSubmitted, setClaimSubmitted] = useState(false);
-  const [copied, setCopied] = useState(false);
 
+  const [item, setItem] = useState(null);
+  const [reporter, setReporter] = useState(null);
+  const [loadingItem, setLoadingItem] = useState(true);
+
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let mounted = true;
+    setLoadingItem(true);
+    apiJson(`/items/${id}`)
+      .then(res => {
+        if (!mounted) return;
+        if (res.ok && res.data) {
+          // backend returns { data: item }
+          const payload = res.data && res.data.data ? res.data.data : res.data;
+          setItem(payload);
+          // set reporter if reporter_id exists
+          if (payload && payload.reporter_id) {
+            apiJson(`/users/${payload.reporter_id}`)
+              .then(u => {
+                if (!mounted) return;
+                if (u.ok && u.data) setReporter(u.data);
+              })
+              .catch(() => {});
+          }
+        } else setItem(null);
+      })
+      .catch(err => {
+        console.error('Failed to fetch item detail', err);
+        if (mounted) setItem(null);
+      })
+      .finally(() => { if (mounted) setLoadingItem(false); });
+
+    return () => { mounted = false; };
+  }, [id]);
+
+  if (loadingItem) return <div>Loading...</div>;
   if (!item) return <div>Item not found</div>;
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+  const itemImage = item.image && item.image.startsWith('/') ? `${baseUrl}${item.image}` : item.image;
+  const displayDate = item?.created_at ? new Date(item.created_at).toLocaleString() : item?.date || '-';
+  const displayReporter = reporter?.fullname || item?.reporter || `User #${item?.reporter_id || '-'}`;
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(item.contactInfo);
+    const contact = item.contactInfo || item.reporterPhone || item.reporterEmail || 'No contact info';
+    navigator.clipboard.writeText(contact);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleClaimSubmit = (e) => {
-    e.preventDefault();
-    setClaimSubmitted(true);
   };
 
   const getContactLink = (info) => {
@@ -50,7 +83,8 @@ const Detail = () => {
   };
 
   const getStatusClass = (status) => {
-    switch (status.toLowerCase()) {
+    const s = (status || '').toLowerCase();
+    switch (s) {
       case 'lost': return 'badge-lost';
       case 'found': return 'badge-found';
       case 'returned': return 'badge-returned';
@@ -74,19 +108,21 @@ const Detail = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '40px' }}>
         {/* Left Column: Image & Description */}
         <div>
-          <div className="glass" style={{
-            background: 'white',
-            borderRadius: '30px',
-            overflow: 'hidden',
-            marginBottom: '30px',
-            boxShadow: '0px 18px 40px rgba(112, 144, 176, 0.12)'
-          }}>
-            <img 
-              src={item.image} 
-              alt={item.title} 
-              style={{ width: '100%', height: '500px', objectFit: 'cover' }}
-            />
-          </div>
+          {itemImage ? (
+            <div className="glass" style={{
+              background: 'white',
+              borderRadius: '30px',
+              overflow: 'hidden',
+              marginBottom: '30px',
+              boxShadow: '0px 18px 40px rgba(112, 144, 176, 0.12)'
+            }}>
+              <img 
+                src={itemImage} 
+                alt={item.title} 
+                style={{ width: '100%', height: '500px', objectFit: 'cover' }}
+              />
+            </div>
+          ) : null}
 
           <div className="glass" style={{ background: 'white', padding: '30px', borderRadius: '30px' }}>
             <h2 style={{ marginBottom: '20px' }}>{t('description')}</h2>
@@ -131,7 +167,7 @@ const Detail = () => {
                 </div>
                 <div>
                   <p style={{ fontSize: '12px' }}>{t('dateLabel')}</p>
-                  <p style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{item.date}</p>
+                  <p style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{displayDate}</p>
                 </div>
               </div>
 
@@ -141,7 +177,7 @@ const Detail = () => {
                 </div>
                 <div>
                   <p style={{ fontSize: '12px' }}>{t('reporterLabel')}</p>
-                  <p style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{item.reporter}</p>
+                  <p style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{displayReporter}</p>
                 </div>
               </div>
             </div>
@@ -156,12 +192,11 @@ const Detail = () => {
                 {item.type === 'lost' ? t('contactOwner') : t('contactFinder')}
               </button>
               <button 
-                onClick={() => setShowClaimModal(true)}
+                onClick={() => navigate(`/claim/${item.id}`)}
                 className="btn btn-gold" 
                 style={{ width: '100%', padding: '16px' }}
               >
-                <ShieldCheck size={20} />
-                {item.type === 'lost' ? t('iFoundThis') : t('claimItem')}
+                {t('claimItem')}
               </button>
             </div>
           </div>
@@ -189,7 +224,7 @@ const Detail = () => {
           alignItems: 'center',
           marginBottom: '24px'
         }}>
-          <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--ipb-blue)' }}>{item.contactInfo}</span>
+          <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--ipb-blue)' }}>{item.contactInfo || item.reporterPhone || item.reporterEmail || 'No contact info'}</span>
           <button 
             onClick={handleCopy}
             style={{ background: 'white', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}
@@ -200,7 +235,7 @@ const Detail = () => {
         
         <div style={{ display: 'flex', gap: '12px' }}>
           <a 
-            href={getContactLink(item.contactInfo)}
+            href={getContactLink(item.contactInfo || item.reporterPhone || item.reporterEmail)}
             target="_blank"
             rel="noopener noreferrer"
             className="btn btn-primary"
@@ -214,41 +249,6 @@ const Detail = () => {
         </div>
       </Modal>
 
-      {/* Claim Modal */}
-      <Modal
-        isOpen={showClaimModal}
-        onClose={() => {
-          setShowClaimModal(false);
-          setClaimSubmitted(false);
-        }}
-        title={t('claimTitle')}
-      >
-        {!claimSubmitted ? (
-          <form onSubmit={handleClaimSubmit}>
-            <p style={{ marginBottom: '20px', color: 'var(--text-secondary)' }}>{t('claimDesc')}</p>
-            <textarea 
-              className="form-input" 
-              placeholder={t('proofPlaceholder')}
-              style={{ minHeight: '120px', marginBottom: '24px', paddingTop: '12px' }}
-              required
-            ></textarea>
-            <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
-              {t('submitClaim')}
-            </button>
-          </form>
-        ) : (
-          <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{ background: '#E2F9EB', color: '#01B574', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-              <Check size={40} />
-            </div>
-            <h3 style={{ marginBottom: '12px' }}>{t('claimSuccess')}</h3>
-            <p style={{ marginBottom: '24px', color: 'var(--text-secondary)' }}>{t('claimSuccessDesc')}</p>
-            <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => setShowClaimModal(false)}>
-              {t('close')}
-            </button>
-          </div>
-        )}
-      </Modal>
     </motion.div>
   );
 };

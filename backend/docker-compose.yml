@@ -9,6 +9,8 @@ services:
       - .env
     depends_on:
       - db
+    volumes:
+      - ./storage:/app/storage
     restart: unless-stopped
 
   # 2. Service untuk Database PostgreSQL
