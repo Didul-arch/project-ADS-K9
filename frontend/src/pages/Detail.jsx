@@ -1,45 +1,66 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Modal from '../components/Modal';
-import { items } from '../data/mockData';
-import { MapPin, Calendar, Tag, User, ArrowLeft, MessageCircle, ShieldCheck, Copy, Check } from 'lucide-react';
+import { MapPin, Calendar, Tag, User, ArrowLeft, MessageCircle, Copy, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
-import { useAuth } from '../context/AuthContext';
-import { useItems } from '../context/ItemsContext';
+import { apiJson } from '../lib/api';
 
 const Detail = () => {
   const { id } = useParams();
-  const { t, language } = useLanguage();
-  const { user } = useAuth();
-  const { items: allItems } = useItems();
-  const item = allItems.find(i => i.id == id);
-  
+  const { t } = useLanguage();
+
+  const [item, setItem] = useState(null);
+  const [reporter, setReporter] = useState(null);
+  const [loadingItem, setLoadingItem] = useState(true);
+
   const [showContactModal, setShowContactModal] = useState(false);
-  const [showClaimModal, setShowClaimModal] = useState(false);
-  const [claimSubmitted, setClaimSubmitted] = useState(false);
   const [copied, setCopied] = useState(false);
+  const navigate = useNavigate();
 
-  // Guest claim form states
-  const [guestName, setGuestName] = useState('');
-  const [guestNIK, setGuestNIK] = useState('');
-  const [guestAge, setGuestAge] = useState('');
-  const [guestAddress, setGuestAddress] = useState('');
-  const [guestKTPFile, setGuestKTPFile] = useState(null);
+  useEffect(() => {
+    let mounted = true;
+    setLoadingItem(true);
+    apiJson(`/items/${id}`)
+      .then(res => {
+        if (!mounted) return;
+        if (res.ok && res.data) {
+          // backend returns { data: item }
+          const payload = res.data && res.data.data ? res.data.data : res.data;
+          setItem(payload);
+          // set reporter if reporter_id exists
+          if (payload && payload.reporter_id) {
+            apiJson(`/users/${payload.reporter_id}`)
+              .then(u => {
+                if (!mounted) return;
+                if (u.ok && u.data) setReporter(u.data);
+              })
+              .catch(() => {});
+          }
+        } else setItem(null);
+      })
+      .catch(err => {
+        console.error('Failed to fetch item detail', err);
+        if (mounted) setItem(null);
+      })
+      .finally(() => { if (mounted) setLoadingItem(false); });
 
+    return () => { mounted = false; };
+  }, [id]);
+
+  if (loadingItem) return <div>Loading...</div>;
   if (!item) return <div>Item not found</div>;
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+  const itemImage = item.image && item.image.startsWith('/') ? `${baseUrl}${item.image}` : item.image;
+  const displayDate = item?.created_at ? new Date(item.created_at).toLocaleString() : item?.date || '-';
+  const displayReporter = reporter?.fullname || item?.reporter || `User #${item?.reporter_id || '-'}`;
 
   const handleCopy = () => {
     const contact = item.contactInfo || item.reporterPhone || item.reporterEmail || 'No contact info';
     navigator.clipboard.writeText(contact);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleClaimSubmit = (e) => {
-    e.preventDefault();
-    setClaimSubmitted(true);
   };
 
   const getContactLink = (info) => {
@@ -62,7 +83,8 @@ const Detail = () => {
   };
 
   const getStatusClass = (status) => {
-    switch (status.toLowerCase()) {
+    const s = (status || '').toLowerCase();
+    switch (s) {
       case 'lost': return 'badge-lost';
       case 'found': return 'badge-found';
       case 'returned': return 'badge-returned';
@@ -86,19 +108,21 @@ const Detail = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '40px' }}>
         {/* Left Column: Image & Description */}
         <div>
-          <div className="glass" style={{
-            background: 'white',
-            borderRadius: '30px',
-            overflow: 'hidden',
-            marginBottom: '30px',
-            boxShadow: '0px 18px 40px rgba(112, 144, 176, 0.12)'
-          }}>
-            <img 
-              src={item.image} 
-              alt={item.title} 
-              style={{ width: '100%', height: '500px', objectFit: 'cover' }}
-            />
-          </div>
+          {itemImage ? (
+            <div className="glass" style={{
+              background: 'white',
+              borderRadius: '30px',
+              overflow: 'hidden',
+              marginBottom: '30px',
+              boxShadow: '0px 18px 40px rgba(112, 144, 176, 0.12)'
+            }}>
+              <img 
+                src={itemImage} 
+                alt={item.title} 
+                style={{ width: '100%', height: '500px', objectFit: 'cover' }}
+              />
+            </div>
+          ) : null}
 
           <div className="glass" style={{ background: 'white', padding: '30px', borderRadius: '30px' }}>
             <h2 style={{ marginBottom: '20px' }}>{t('description')}</h2>
@@ -143,7 +167,7 @@ const Detail = () => {
                 </div>
                 <div>
                   <p style={{ fontSize: '12px' }}>{t('dateLabel')}</p>
-                  <p style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{item.date}</p>
+                  <p style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{displayDate}</p>
                 </div>
               </div>
 
@@ -153,7 +177,7 @@ const Detail = () => {
                 </div>
                 <div>
                   <p style={{ fontSize: '12px' }}>{t('reporterLabel')}</p>
-                  <p style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{item.reporter || item.reporterName}</p>
+                  <p style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{displayReporter}</p>
                 </div>
               </div>
             </div>
@@ -168,12 +192,11 @@ const Detail = () => {
                 {item.type === 'lost' ? t('contactOwner') : t('contactFinder')}
               </button>
               <button 
-                onClick={() => setShowClaimModal(true)}
+                onClick={() => navigate(`/claim/${item.id}`)}
                 className="btn btn-gold" 
                 style={{ width: '100%', padding: '16px' }}
               >
-                <ShieldCheck size={20} />
-                {item.type === 'lost' ? t('iFoundThis') : t('claimItem')}
+                {t('claimItem')}
               </button>
             </div>
           </div>
@@ -226,152 +249,6 @@ const Detail = () => {
         </div>
       </Modal>
 
-      {/* Claim Modal */}
-      <Modal
-        isOpen={showClaimModal}
-        onClose={() => {
-          setShowClaimModal(false);
-          setClaimSubmitted(false);
-        }}
-        title={t('claimTitle')}
-      >
-        {!claimSubmitted ? (
-          <form onSubmit={handleClaimSubmit}>
-            <p style={{ marginBottom: '20px', color: 'var(--text-secondary)' }}>{t('claimDesc')}</p>
-
-            {/* Guest Identity Verification Block */}
-            {!user && (
-              <div style={{
-                background: '#FFF8F6',
-                borderRadius: '16px',
-                padding: '16px',
-                border: '1px solid #FFD0C6',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                marginBottom: '20px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <ShieldCheck size={18} color="#EE5D50" />
-                  <h4 style={{ margin: 0, fontSize: '14px', color: '#EE5D50', fontWeight: 800 }}>
-                    {t('guestVerification')}
-                  </h4>
-                </div>
-                <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-secondary)' }}>
-                  {t('guestVerificationDesc')}
-                </p>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ fontSize: '12px' }}>{t('nameLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    placeholder={t('namePlaceholder')} 
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                    style={{ padding: '8px 12px', fontSize: '13px' }}
-                    required
-                  />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label style={{ fontSize: '12px' }}>{t('nikLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      maxLength="16"
-                      pattern="\d{16}"
-                      placeholder="NIK (16 digit)" 
-                      value={guestNIK}
-                      onChange={(e) => setGuestNIK(e.target.value.replace(/\D/g, ''))}
-                      style={{ padding: '8px 12px', fontSize: '13px' }}
-                      required
-                    />
-                  </div>
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label style={{ fontSize: '12px' }}>{t('ageLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
-                    <input 
-                      type="number" 
-                      className="form-input" 
-                      min="1"
-                      placeholder="Age" 
-                      value={guestAge}
-                      onChange={(e) => setGuestAge(e.target.value)}
-                      style={{ padding: '8px 12px', fontSize: '13px' }}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ fontSize: '12px' }}>{t('addressLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
-                  <textarea 
-                    className="form-input" 
-                    placeholder="Address" 
-                    value={guestAddress}
-                    onChange={(e) => setGuestAddress(e.target.value)}
-                    style={{ padding: '8px 12px', fontSize: '13px', height: '60px', resize: 'none', minHeight: '60px' }}
-                    required
-                  ></textarea>
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ fontSize: '12px' }}>{t('uploadIdCard')} <span style={{ color: '#EE5D50' }}>*</span></label>
-                  <div 
-                    onClick={() => document.getElementById('guestKtpClaimInput').click()}
-                    style={{
-                      border: '1.5px dashed #FFD0C6',
-                      borderRadius: '12px',
-                      padding: '12px',
-                      textAlign: 'center',
-                      background: guestKTPFile ? '#E2F9EB' : 'white',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: '600',
-                      color: guestKTPFile ? '#01B574' : '#EE5D50'
-                    }}
-                  >
-                    {guestKTPFile ? `✓ ${guestKTPFile.name}` : t('uploadIdCard')}
-                    <input 
-                      type="file" 
-                      id="guestKtpClaimInput"
-                      style={{ display: 'none' }} 
-                      accept="image/*"
-                      onChange={(e) => {
-                        if (e.target.files && e.target.files[0]) {
-                          setGuestKTPFile(e.target.files[0]);
-                        }
-                      }}
-                      required={!user}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="form-group">
-              <label style={{ fontSize: '13px' }}>{language === 'en' ? 'Proof of Ownership' : 'Bukti Kepemilikan'} <span style={{ color: '#EE5D50' }}>*</span></label>
-              <textarea 
-                className="form-input" 
-                placeholder={t('proofPlaceholder')}
-                style={{ minHeight: '120px', marginBottom: '24px', paddingTop: '12px' }}
-                required
-              ></textarea>
-            </div>
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '16px' }}>
-              {t('submitClaim')}
-            </button>
-          </form>
-        ) : (
-          <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{ background: '#E2F9EB', color: '#01B574', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-              <Check size={40} />
-            </div>
-            <h3 style={{ marginBottom: '12px' }}>{t('claimSuccess')}</h3>
-            <p style={{ marginBottom: '24px', color: 'var(--text-secondary)' }}>{t('claimSuccessDesc')}</p>
-            <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => setShowClaimModal(false)}>
-              {t('close')}
-            </button>
-          </div>
-        )}
-      </Modal>
     </motion.div>
   );
 };

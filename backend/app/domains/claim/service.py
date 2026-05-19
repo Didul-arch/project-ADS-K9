@@ -11,6 +11,8 @@ class ClaimService:
     async def submit_claim(self, claim: ClaimEntity) -> ClaimEntity:
         if len(claim.proof_text.strip()) < 5:
             raise ValueError("Bukti klaim minimal 5 karakter.")
+        if not claim.proof_image:
+            raise ValueError("Bukti gambar klaim wajib diunggah.")
 
         return await self.claim_repo.save(claim)
 

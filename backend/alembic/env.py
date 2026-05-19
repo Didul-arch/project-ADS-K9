@@ -1,4 +1,6 @@
 import asyncio
+import os
+import sys
 from logging.config import fileConfig
 
 from sqlalchemy import pool
@@ -6,6 +8,12 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
+# Ensure project root is on sys.path so imports work when running inside Docker
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
+# Import app modules using package root 'app' which matches Docker image layout (/app)
 from app.infrastructure.db.session import Base
 from app.infrastructure.config.settings import settings
 from app.infrastructure.db.models import claim_model, item_model, user_model  # noqa: F401

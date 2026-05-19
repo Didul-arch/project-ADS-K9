@@ -1,17 +1,20 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { apiJson } from '../lib/api';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Check if user session exists in localStorage
     const savedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    if (savedUser && token) {
+    const savedToken = localStorage.getItem('token');
+    if (savedUser && savedToken) {
       setUser(JSON.parse(savedUser));
+      setToken(savedToken);
     }
     setLoading(false);
   }, []);
@@ -21,36 +24,24 @@ export const AuthProvider = ({ children }) => {
       const params = new URLSearchParams();
       params.append('username', email.trim());
       params.append('password', password);
+      const tokenRes = await apiJson('/token', { method: 'POST', body: params });
 
-      const response = await fetch('http://localhost:8080/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: params,
-      });
+      if (!tokenRes.ok || !tokenRes.data) return false;
 
-      if (!response.ok) {
-        return false;
-      }
-
-      const tokenData = await response.json();
+      const tokenData = tokenRes.data;
       const token = tokenData.access_token;
+      setToken(token);
       localStorage.setItem('token', token);
 
       // Fetch user profile info
-      const meResponse = await fetch('http://localhost:8080/users/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const meResponse = await apiJson('/users/me', { token });
 
-      if (!meResponse.ok) {
+      if (!meResponse.ok || !meResponse.data) {
         logout();
         return false;
       }
 
-      const dbUser = await meResponse.json();
+      const dbUser = meResponse.data;
       
       // Map backend role enum to frontend roles:
       // Backend: 'admin', 'civitas', 'umum'
@@ -79,27 +70,19 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setUser(null);
+    setToken(null);
     localStorage.removeItem('user');
     localStorage.removeItem('token');
   };
 
   const signUp = async (name, email, password) => {
     try {
-      const response = await fetch('http://localhost:8080/users/', {
+      const res = await apiJson('/users/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email.trim(),
-          fullname: name,
-          password: password
-        }),
+        body: { email: email.trim(), fullname: name, password }
       });
 
-      if (!response.ok) {
-        return false;
-      }
+      if (!res.ok) return false;
 
       // Automatically log the user in after successful sign up
       return await login(email, password);
@@ -113,7 +96,7 @@ export const AuthProvider = ({ children }) => {
   const switchRole = () => {};
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, signUp, switchRole, loading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, signUp, switchRole, loading }}>
       {children}
     </AuthContext.Provider>
   );

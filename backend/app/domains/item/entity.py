@@ -22,6 +22,7 @@ class ItemEntity:
     image: str | None
     latitude: float | None
     longitude: float | None
+    category: str | None
     report_type: ReportType
     status: ItemStatus
     reporter_id: int

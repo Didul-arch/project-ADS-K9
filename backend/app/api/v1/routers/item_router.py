@@ -1,27 +1,51 @@
 from datetime import datetime
 from datetime import date
+from pathlib import Path
+from uuid import uuid4
 
 from app.api.v1.routers.auth_router import get_current_user
 from app.domains.user.entity import UserEntity
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.schemas.item_schema import ReportFoundItemRequest, ReportItemRequest
+from app.api.v1.schemas.item_schema import ItemResponse
 from app.domains.item.entity import ItemEntity, ItemStatus, ReportType
 from app.domains.item.service import ItemService
+from app.infrastructure.config.settings import settings
 from app.infrastructure.db.session import get_db
 from app.infrastructure.repositories.item_repository import ItemRepository
 
 router = APIRouter()
 
 
-def build_item(payload, status: ItemStatus, report_type: ReportType, reporter_id: int) -> ItemEntity:
+def save_item_image(upload_file: UploadFile) -> str:
+	storage_dir = Path(settings.CLAIM_UPLOAD_DIR).parent / "items"
+	storage_dir.mkdir(parents=True, exist_ok=True)
+	extension = Path(upload_file.filename or "item").suffix or ".jpg"
+	file_name = f"{uuid4().hex}{extension}"
+	file_path = storage_dir / file_name
+	content = upload_file.file.read()
+	file_path.write_bytes(content)
+	return f"/storage/items/{file_name}"
+
+
+def build_item(
+	title: str,
+	description: str,
+	location: str,
+	category: str | None,
+	image: str,
+	status: ItemStatus,
+	report_type: ReportType,
+	reporter_id: int,
+) -> ItemEntity:
 	return ItemEntity(
 		id=None,
-		title=payload.title,
-		description=payload.description,
-		location=payload.location,
-		image=payload.image,
+		title=title,
+		description=description,
+		location=location,
+		category=category,
+		image=image,
 		latitude=None,
 		longitude=None,
 		report_type=report_type,
@@ -33,7 +57,11 @@ def build_item(payload, status: ItemStatus, report_type: ReportType, reporter_id
 
 @router.post("/items/report-lost")
 async def report_lost_item(
-	payload: ReportItemRequest,
+	title: str = Form(...),
+	description: str = Form(...),
+	location: str = Form(...),
+	category: str | None = Form(None),
+	image: UploadFile = File(...),
 	db: AsyncSession = Depends(get_db),
 	current_user: UserEntity = Depends(get_current_user)
 ):
@@ -43,8 +71,9 @@ async def report_lost_item(
 	reporter_id = current_user.id
 
 	try:
+		image_path = save_item_image(image)
 		result = await service.report_lost_item(
-			build_item(payload, ItemStatus.LOST, ReportType.LOST, reporter_id)
+			build_item(title, description, location, category, image_path, ItemStatus.LOST, ReportType.LOST, reporter_id)
 		)
 		return {"status": "success", "data": result}
 	except ValueError as e:
@@ -53,7 +82,11 @@ async def report_lost_item(
 
 @router.post("/items/report-found")
 async def report_found_item(
-	payload: ReportFoundItemRequest,
+	title: str = Form(...),
+	description: str = Form(...),
+	location: str = Form(...),
+	category: str | None = Form(None),
+	image: UploadFile = File(...),
 	db: AsyncSession = Depends(get_db),
 	current_user: UserEntity = Depends(get_current_user)
 ):
@@ -63,8 +96,9 @@ async def report_found_item(
 	reporter_id = current_user.id
 
 	try:
+		image_path = save_item_image(image)
 		result = await service.report_found_item(
-			build_item(payload, ItemStatus.FOUND, ReportType.FOUND, reporter_id)
+			build_item(title, description, location, category, image_path, ItemStatus.FOUND, ReportType.FOUND, reporter_id)
 		)
 		return {"status": "success", "data": result}
 	except ValueError as e:
@@ -76,6 +110,15 @@ async def list_items(db: AsyncSession = Depends(get_db)):
 	repo = ItemRepository(db)
 	items = await repo.get_all()
 	return {"data": items}
+
+
+@router.get("/items/{item_id}")
+async def get_item_detail(item_id: int, db: AsyncSession = Depends(get_db)):
+	repo = ItemRepository(db)
+	item = await repo.get_by_id(item_id)
+	if not item:
+		raise HTTPException(status_code=404, detail="Item tidak ditemukan")
+	return {"data": item}
 
 
 @router.get("/items/search")

@@ -6,35 +6,18 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useItems } from '../context/ItemsContext';
+import { apiJson } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 
 const Report = () => {
   const navigate = useNavigate();
   const { language, t } = useLanguage();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { refreshItems } = useItems();
   
   const [submitted, setSubmitted] = useState(false);
   const [file, setFile] = useState(null);
-  
-  // Public user fields
-  const [publicName, setPublicName] = useState('');
-  const [publicEmail, setPublicEmail] = useState('');
-  const [publicWhatsApp, setPublicWhatsApp] = useState('');
-
-  // Guest ID verification fields
-  const [guestNIK, setGuestNIK] = useState('');
-  const [guestAge, setGuestAge] = useState('');
-  const [guestAddress, setGuestAddress] = useState('');
-  const [guestKTPFile, setGuestKTPFile] = useState(null);
-
-  // Auto-fill logged-in user details if present, but allow editing
-  React.useEffect(() => {
-    if (user) {
-      setPublicName(user.name || '');
-      setPublicEmail(user.email || '');
-    }
-  }, [user]);
+  const [uploadError, setUploadError] = useState('');
 
   // Item form fields
   const [itemName, setItemName] = useState('');
@@ -59,85 +42,35 @@ const Report = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Create new reported item object for localStorage persistence
-    const newItem = {
-      id: Date.now(),
-      title: itemName,
-      description: description || 'No description provided.',
-      category,
-      location,
-      locationDetail,
-      date,
-      type: reportType,
-      status: reportType === 'lost' ? 'Lost' : 'Found',
-      image: file 
-        ? URL.createObjectURL(file) 
-        : 'https://images.unsplash.com/photo-1540553016722-983e48a2cd10?auto=format&fit=crop&q=80&w=400',
-      reporterEmail: user ? user.email : publicEmail,
-      reporterName: user ? user.name : publicName,
-      reporterPhone: user ? '' : publicWhatsApp,
-      activityDate: date,
-      activityType: reportType === 'lost' ? 'Reported Lost' : 'Reported Found',
-      activityStatus: 'Active'
-    };
 
-    // 1. Post to actual FastAPI backend!
+    if (!file) {
+      setUploadError(t('reportImageRequired'));
+      return;
+    }
+
+    setUploadError('');
+
     try {
-      const endpoint = reportType === 'lost' 
-        ? 'http://localhost:8080/items/report-lost' 
-        : 'http://localhost:8080/items/report-found';
-      
-      const payload = {
-        title: itemName,
-        description: description || 'No description provided.',
-        location: location + (locationDetail ? ` - ${locationDetail}` : ''),
-        latitude: null,
-        longitude: null,
-        image: file ? file.name : null,
-        reporter_id: user && user.id ? parseInt(user.id) : 2 // Fallback to user with ID 2 if guest
-      };
+      const path = reportType === 'lost' ? '/items/report-lost' : '/items/report-found';
+      const formData = new FormData();
+      formData.append('title', itemName);
+      formData.append('description', description || 'No description provided.');
+      formData.append('location', location + (locationDetail ? ` - ${locationDetail}` : ''));
+      formData.append('category', category || 'General');
+      if (file) {
+        formData.append('image', file);
+      }
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
-        console.log('Successfully posted reported item to backend DB!');
-        // Trigger a global context refresh so Browse/Dashboard update instantly
+      const res = await apiJson(path, { method: 'POST', body: formData, token });
+      if (res.ok) {
         refreshItems();
+        setSubmitted(true);
       } else {
-        console.error('Failed to post to backend DB:', await response.text());
+        console.error('Failed to post to backend DB:', res);
       }
     } catch (err) {
       console.error('Error reporting to backend DB:', err);
     }
-
-    // 2. Retrieve existing items, add new one, and save back to localStorage
-    const existing = localStorage.getItem('reported_items');
-    const itemsList = existing ? JSON.parse(existing) : [];
-    itemsList.unshift(newItem);
-    localStorage.setItem('reported_items', JSON.stringify(itemsList));
-
-    // 3. Add to dynamic notifications
-    const newNotif = {
-      id: Date.now(),
-      type: reportType === 'lost' ? 'match' : 'approved',
-      name: itemName,
-      time: '1s ago',
-      read: false
-    };
-    const existingNotifs = localStorage.getItem('notifications');
-    const notifsList = existingNotifs ? JSON.parse(existingNotifs) : [];
-    notifsList.unshift(newNotif);
-    localStorage.setItem('notifications', JSON.stringify(notifsList));
-
-    console.log('Saved Report and Notif to LocalStorage:', newItem);
-    setSubmitted(true);
   };
 
   const resetForm = () => {
@@ -149,13 +82,7 @@ const Report = () => {
     setDate('');
     setReportType('lost');
     setFile(null);
-    setPublicName('');
-    setPublicEmail('');
-    setPublicWhatsApp('');
-    setGuestNIK('');
-    setGuestAge('');
-    setGuestAddress('');
-    setGuestKTPFile(null);
+    setUploadError('');
     setSubmitted(false);
   };
 
@@ -174,6 +101,23 @@ const Report = () => {
         <p style={{ marginBottom: '30px', textAlign: 'center' }}>{t('successDesc')}</p>
         <button className="btn btn-primary" onClick={resetForm}>{t('createAnother')}</button>
       </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Navbar title={t('report')} />
+        <div className="glass" style={{ background: 'white', padding: '40px', maxWidth: '720px', margin: '0 auto', textAlign: 'center' }}>
+          <h2 style={{ marginBottom: '12px' }}>{t('signIn')}</h2>
+          <p style={{ marginBottom: '24px', color: 'var(--text-secondary)' }}>{t('reportLoginRequired')}</p>
+          <button className="btn btn-primary" onClick={() => navigate('/login')}>{t('signIn')}</button>
+        </div>
+      </motion.div>
     );
   }
 
@@ -285,7 +229,6 @@ const Report = () => {
               </select>
             </div>
 
-            {/* Always Visible Contact Block */}
             <div style={{
               gridColumn: '1 / -1',
               background: '#F4F7FE',
@@ -294,153 +237,19 @@ const Report = () => {
               border: '1px solid #E0E5F2',
               display: 'flex',
               flexDirection: 'column',
-              gap: '16px',
+              gap: '12px',
               marginBottom: '10px'
             }}>
               <h4 style={{ margin: 0, fontSize: '16px', color: 'var(--ipb-blue)', fontWeight: 700 }}>
-                {language === 'en' ? 'Reporter Contact Details' : 'Detail Kontak Pelapor'}
+                Reporter Info
               </h4>
-              <p style={{ margin: '0 0 10px 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                {language === 'en' 
-                  ? 'Please fill out your contact details so others can coordinate the return of the item.'
-                  : 'Silakan isi detail kontak Anda agar orang lain dapat berkoordinasi mengenai pengembalian barang.'}
+              <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)' }}>
+                {user?.name} · {user?.email}
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ fontSize: '13px' }}>{t('nameLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    placeholder={t('namePlaceholder')} 
-                    value={publicName}
-                    onChange={(e) => setPublicName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ fontSize: '13px' }}>{t('emailLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
-                  <input 
-                    type="email" 
-                    className="form-input" 
-                    placeholder="mail@example.com" 
-                    value={publicEmail}
-                    onChange={(e) => setPublicEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ fontSize: '13px' }}>{t('phoneLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
-                  <input 
-                    type="tel" 
-                    className="form-input" 
-                    placeholder="+62..." 
-                    value={publicWhatsApp}
-                    onChange={(e) => setPublicWhatsApp(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
+              <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)' }}>
+                Your account is attached automatically when you submit this report.
+              </p>
             </div>
-
-            {/* Guest Identity Verification Block */}
-            {!user && (
-              <div style={{
-                gridColumn: '1 / -1',
-                background: '#FFF8F6',
-                borderRadius: '20px',
-                padding: '24px',
-                border: '1.5px solid #FFD0C6',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '16px',
-                marginBottom: '10px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <ShieldCheck size={22} color="#EE5D50" />
-                  <h4 style={{ margin: 0, fontSize: '16px', color: '#EE5D50', fontWeight: 800 }}>
-                    {t('guestVerification')}
-                  </h4>
-                </div>
-                <p style={{ margin: '0 0 10px 0', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                  {t('guestVerificationDesc')}
-                </p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '20px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label style={{ fontSize: '13px' }}>{t('nikLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
-                      <input 
-                        type="text" 
-                        className="form-input" 
-                        maxLength="16"
-                        pattern="\d{16}"
-                        placeholder="e.g. 3201xxxxxxxxxxxx" 
-                        value={guestNIK}
-                        onChange={(e) => setGuestNIK(e.target.value.replace(/\D/g, ''))}
-                        required
-                      />
-                    </div>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label style={{ fontSize: '13px' }}>{t('ageLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
-                      <input 
-                        type="number" 
-                        className="form-input" 
-                        min="1"
-                        max="120"
-                        placeholder="e.g. 21" 
-                        value={guestAge}
-                        onChange={(e) => setGuestAge(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="form-group" style={{ marginBottom: 0 }}>
-                    <label style={{ fontSize: '13px' }}>{t('addressLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
-                    <textarea 
-                      className="form-input" 
-                      placeholder="e.g. Jl. Raya Pajajaran No. 1, Bogor" 
-                      value={guestAddress}
-                      onChange={(e) => setGuestAddress(e.target.value)}
-                      style={{ height: '115px', resize: 'none', paddingTop: '10px' }}
-                      required
-                    ></textarea>
-                  </div>
-                </div>
-
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label style={{ fontSize: '13px' }}>{t('uploadIdCard')} <span style={{ color: '#EE5D50' }}>*</span></label>
-                  <div 
-                    onClick={() => document.getElementById('guestKtpInput').click()}
-                    style={{
-                      border: '2px dashed #FFD0C6',
-                      borderRadius: '16px',
-                      padding: '20px',
-                      textAlign: 'center',
-                      background: guestKTPFile ? '#E2F9EB' : 'white',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      borderStyle: guestKTPFile ? 'solid' : 'dashed',
-                      borderColor: guestKTPFile ? '#01B574' : '#FFD0C6'
-                    }}
-                  >
-                    <span style={{ fontSize: '14px', fontWeight: '600', color: guestKTPFile ? '#01B574' : '#EE5D50' }}>
-                      {guestKTPFile ? `✓ ${guestKTPFile.name}` : t('uploadIdCard')}
-                    </span>
-                    <input 
-                      type="file" 
-                      id="guestKtpInput"
-                      style={{ display: 'none' }} 
-                      accept="image/*"
-                      onChange={(e) => {
-                        if (e.target.files && e.target.files[0]) {
-                          setGuestKTPFile(e.target.files[0]);
-                        }
-                      }}
-                      required={!user}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="form-group" style={{ marginBottom: '40px' }}>
@@ -475,6 +284,11 @@ const Report = () => {
               </p>
               <p style={{ fontSize: '12px' }}>{t('uploadLimit')}</p>
             </div>
+            {uploadError && (
+              <p style={{ marginTop: '12px', color: '#EE5D50', fontSize: '13px', fontWeight: 600 }}>
+                {uploadError}
+              </p>
+            )}
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '18px' }}>

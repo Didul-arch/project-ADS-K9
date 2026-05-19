@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 
 const ItemCard = ({ item }) => {
   if (!item) return null;
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+  const imageUrl = item.image && item.image.startsWith('/') ? `${baseUrl}${item.image}` : item.image;
 
   const getStatusClass = (status) => {
     if (!status) return "";
@@ -30,12 +32,12 @@ const ItemCard = ({ item }) => {
         flexDirection: "column",
       }}
     >
-      {item.image && (
+      {imageUrl && (
         <div
           style={{ position: "relative", height: "180px", overflow: "hidden" }}
         >
           <img
-            src={item.image}
+            src={imageUrl}
             alt={item.title || "Item"}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />

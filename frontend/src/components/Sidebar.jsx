@@ -43,7 +43,7 @@ const Sidebar = () => {
   const adminMenuItems = [
     { icon: <Layout size={20} />, label: 'Admin Dashboard', path: '/dashboard' },
     { icon: <Search size={20} />, label: 'All Items', path: '/browse' },
-    { icon: <PlusCircle size={20} />, label: 'Manage Claims', path: '/claims' },
+    { icon: <PlusCircle size={20} />, label: 'Report', path: '/report' },
     { icon: <Clock size={20} />, label: 'System Logs', path: '/history' },
     { icon: <Home size={20} />, label: 'User Management', path: '/users' },
   ];

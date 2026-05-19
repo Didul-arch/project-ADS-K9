@@ -1,28 +1,42 @@
 from datetime import date, datetime
+from pathlib import Path
+from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.schemas.claim_schema import CreateClaimRequest, ReviewClaimRequest
+from app.api.v1.schemas.claim_schema import ReviewClaimRequest
 from app.domains.claim.entity import ClaimEntity, ClaimStatus
 from app.domains.claim.service import ClaimService
 from app.infrastructure.db.session import get_db
 from app.infrastructure.repositories.claim_repository import ClaimRepository
+from app.infrastructure.config.settings import settings
 
 from app.api.v1.routers.auth_router import get_current_user  # Adjust path if your folder layout is different
 from app.domains.user.entity import UserEntity, Role
 
 router = APIRouter()
 
+def save_claim_proof_image(upload_file: UploadFile) -> str:
+	storage_dir = Path(settings.CLAIM_UPLOAD_DIR)
+	storage_dir.mkdir(parents=True, exist_ok=True)
+	extension = Path(upload_file.filename or "proof").suffix or ".jpg"
+	file_name = f"{uuid4().hex}{extension}"
+	file_path = storage_dir / file_name
+	content = upload_file.file.read()
+	file_path.write_bytes(content)
+	return f"/storage/claims/{file_name}"
+
+
 # Updated helper to accept the authenticating user's ID
-def build_claim(payload: CreateClaimRequest, claimer_id: int) -> ClaimEntity:
+def build_claim(proof_text: str, proof_image: str, item_id: int, claimer_id: int) -> ClaimEntity:
 	return ClaimEntity(
 		id=None,
-		proof_text=payload.proof_text,
-		proof_image=payload.proof_image,
+		proof_text=proof_text,
+		proof_image=proof_image,
 		status=ClaimStatus.PENDING,
 		claimer_id=claimer_id,        
-		item_id=payload.item_id,
+		item_id=item_id,
 		reviewer_id=None,
 		reviewed_at=None,
 		created_at=datetime.now(),
@@ -32,7 +46,9 @@ def build_claim(payload: CreateClaimRequest, claimer_id: int) -> ClaimEntity:
 
 @router.post("/claims/")
 async def create_claim(
-	payload: CreateClaimRequest, 
+	proof_text: str = Form(...),
+	item_id: int = Form(...),
+	proof_image: UploadFile = File(...),
 	db: AsyncSession = Depends(get_db),
 	current_user: UserEntity = Depends(get_current_user)
 ):
@@ -41,7 +57,8 @@ async def create_claim(
 
 	try:
 		# Pass current_user.id directly so they can't impersonate someone else
-		claim = await service.submit_claim(build_claim(payload, current_user.id))
+		image_path = save_claim_proof_image(proof_image)
+		claim = await service.submit_claim(build_claim(proof_text, image_path, item_id, current_user.id))
 		return {"status": "success", "data": claim}
 	except ValueError as e:
 		raise HTTPException(status_code=400, detail=str(e))

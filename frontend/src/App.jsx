@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import Browse from './pages/Browse';
 import Report from './pages/Report';
+import Claim from './pages/Claim';
 import Detail from './pages/Detail';
 import History from './pages/History';
 import Home from './pages/Home';
@@ -34,6 +35,7 @@ function App() {
                         <Route path="/browse" element={<Browse />} />
                         <Route path="/report" element={<Report />} />
                         <Route path="/detail/:id" element={<Detail />} />
+                        <Route path="/claim/:id" element={<Claim />} />
                         <Route path="/history" element={<History />} />
                       </Routes>
                     </main>
