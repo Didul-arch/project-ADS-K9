@@ -21,19 +21,19 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 async def create_user(payload: CreateUserRequest, db: AsyncSession = Depends(get_db)):
 	repo = UserRepository(db)
 	service = UserService(repo)
-	
-	resolved_role = Role.UMUM
-	if payload.email.strip().lower().endswith(("@apps.ipb.ac.id", "@ipb.ac.id")):
-		resolved_role = Role.CIVITAS
 
 	user_data = UserEntity(
 		email=payload.email,
 		fullname=payload.fullname,
+		identity_number=payload.identity_number,
+		identity_document=payload.identity_document,
 		password_hashed=auth_utils.get_password_hash(payload.password),
-		role=resolved_role,
 		is_active=True,
 	)
-	created_user = await service.create_user(user_data)
+	try:
+		created_user = await service.create_user(user_data)
+	except ValueError as e:
+		raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 	return {"message": "User Berhasil Dibuat", "data": {"id": created_user.id, "email": created_user.email}}
 
 

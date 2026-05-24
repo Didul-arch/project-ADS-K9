@@ -10,6 +10,8 @@ class Role(str, Enum):
 class UserEntity:
     email: str
     fullname: str
+    identity_number: str | None
+    identity_document: str | None
     password_hashed: str
     id: int | None = None
     role: Role = Role.UMUM

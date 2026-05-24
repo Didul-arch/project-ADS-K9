@@ -5,6 +5,8 @@ class CreateUserRequest(BaseModel):
     email: str
     fullname: str
     password: str
+    identity_number: str | None = None
+    identity_document: str | None = None
 
 class UserResponse(BaseModel):
     id: int
@@ -12,6 +14,8 @@ class UserResponse(BaseModel):
     fullname: str
     is_active: bool
     role: str
+    identity_number: str | None = None
+    identity_document: str | None = None
 
 
 class UserInDB(BaseModel):
@@ -20,3 +24,5 @@ class UserInDB(BaseModel):
     fullname: str
     is_active: bool
     password_hash: str
+    identity_number: str | None = None
+    identity_document: str | None = None

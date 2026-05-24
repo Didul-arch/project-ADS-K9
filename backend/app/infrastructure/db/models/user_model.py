@@ -9,6 +9,8 @@ class UserModel(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    identity_number: Mapped[str | None] = mapped_column(String, nullable=True)
+    identity_document: Mapped[str | None] = mapped_column(String, nullable=True)
     full_name: Mapped[str] = mapped_column(String, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     password_hash: Mapped[str] = mapped_column(String, nullable=False)
