@@ -9,6 +9,32 @@
 
 ## Menjalankan Backend
 
+### Startup dengan Docker
+
+1. Stop dan bersihkan container lama kalau masih jalan:
+
+```bash
+docker compose down
+```
+
+2. Build dan jalankan service backend + database:
+
+```bash
+docker compose up -d --build
+```
+
+3. Jalankan migrasi Alembic dari dalam container backend, bukan dari local machine:
+
+```bash
+docker compose exec ads_backend alembic upgrade head
+```
+
+4. Backend sudah siap diakses di `http://localhost:8000`.
+
+### Mode lokal (opsional)
+
+Kalau kamu ingin jalan tanpa Docker untuk development cepat, install dependensi lalu jalankan server:
+
 1. Instal dependensi:
 
 ```bash

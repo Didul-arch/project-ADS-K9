@@ -3,6 +3,10 @@ from app.infrastructure.repositories.user_repository import UserRepository
 from app.domains.user.entity import Role
 
 
+class DuplicateUserError(ValueError):
+    pass
+
+
 class UserService:
     def __init__(self, user_repo: UserRepository):
         self.user_repo = user_repo
@@ -23,6 +27,10 @@ class UserService:
             raise ValueError("Format email tidak valid.")
         if not user.password_hashed.strip():
             raise ValueError("Password wajib diisi.")
+
+        existing_user = await self.user_repo.get_by_email(user.email)
+        if existing_user:
+            raise DuplicateUserError("Email sudah terdaftar.")
 
         # Resolve role based on email (business rule)
         email_lower = user.email.strip().lower()

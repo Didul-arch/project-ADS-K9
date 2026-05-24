@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from app.infrastructure.db.models.user_model import UserModel
 from app.domains.user.entity import UserEntity, Role
 
@@ -59,8 +60,12 @@ class UserRepository:
             role=user.role or Role.UMUM,
         )
         self.db.add(new_user)
-        await self.db.commit()
-        await self.db.refresh(new_user)
+        try:
+            await self.db.commit()
+            await self.db.refresh(new_user)
+        except IntegrityError:
+            await self.db.rollback()
+            raise ValueError("Email sudah terdaftar.")
 
         return self._to_entity(new_user)
 

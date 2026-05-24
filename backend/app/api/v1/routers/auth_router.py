@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.schemas.user_schema import CreateUserRequest, UserResponse
 from app.api.v1.schemas.auth_schema import Token
 from app.domains.user.entity import UserEntity, Role
-from app.domains.user.service import UserService
+from app.domains.user.service import UserService, DuplicateUserError
 from app.infrastructure.db.session import get_db
 from app.infrastructure.repositories.user_repository import UserRepository
 from app.infrastructure.auth import utils as auth_utils
@@ -32,6 +32,8 @@ async def create_user(payload: CreateUserRequest, db: AsyncSession = Depends(get
 	)
 	try:
 		created_user = await service.create_user(user_data)
+	except DuplicateUserError as e:
+		raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 	except ValueError as e:
 		raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 	return {"message": "User Berhasil Dibuat", "data": {"id": created_user.id, "email": created_user.email}}
@@ -70,4 +72,12 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
 async def read_users_me(current_user: UserEntity = Depends(get_current_user)):
 	if current_user.id is None:
 		raise HTTPException(status_code=500, detail="User id missing")
-	return UserResponse(id=current_user.id, email=current_user.email, fullname=current_user.fullname, is_active=current_user.is_active, role=current_user.role)
+	return UserResponse(
+		id=current_user.id,
+		email=current_user.email,
+		fullname=current_user.fullname,
+		is_active=current_user.is_active,
+		role=current_user.role.value if hasattr(current_user.role, "value") else str(current_user.role),
+		identity_number=current_user.identity_number,
+		identity_document=current_user.identity_document,
+	)

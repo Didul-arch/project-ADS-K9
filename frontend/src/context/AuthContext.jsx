@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       const dbUser = meResponse.data;
+      console.log('Fetched user data:', dbUser);
       
       // Map backend role enum to frontend roles:
       // Backend: 'admin', 'civitas', 'umum'
@@ -53,9 +54,7 @@ export const AuthProvider = ({ children }) => {
         email: dbUser.email,
         name: dbUser.fullname,
         role: mappedRole,
-        nim: dbUser.email.endsWith('@apps.ipb.ac.id') 
-          ? 'G64' + Math.floor(1000000 + Math.random() * 9000000)
-          : '',
+        nim: dbUser.email.endsWith('@apps.ipb.ac.id'),   
         department: dbUser.role === 'admin' ? 'Direktorat Sistem Informasi' : 'Ilmu Komputer'
       };
 
