@@ -10,6 +10,7 @@ import History from './pages/History';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
+import UserManagement from './pages/UserManagement';
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider } from './context/AuthContext';
 import { SearchProvider } from './context/SearchContext';
@@ -37,6 +38,7 @@ function App() {
                         <Route path="/detail/:id" element={<Detail />} />
                         <Route path="/claim/:id" element={<Claim />} />
                         <Route path="/history" element={<History />} />
+                        <Route path="/users" element={<UserManagement />} />
                       </Routes>
                     </main>
                   </div>
