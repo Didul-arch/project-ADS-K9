@@ -8,6 +8,12 @@ class CreateUserRequest(BaseModel):
     identity_number: str | None = None
     identity_document: str | None = None
 
+
+class UserPublicResponse(BaseModel):
+    id: int
+    fullname: str
+
+
 class UserResponse(BaseModel):
     id: int
     email: str

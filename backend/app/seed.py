@@ -22,6 +22,8 @@ async def seed_data():
             user1 = UserModel(
                 email="luqman@apps.ipb.ac.id",
                 full_name="Luqman",
+                identity_number="G64123451",
+                identity_document=None,
                 is_active=True,
                 password_hash=get_password_hash("luqman123"),
                 role=Role.CIVITAS,
@@ -29,6 +31,8 @@ async def seed_data():
             user2 = UserModel(
                 email="naufal@apps.ipb.ac.id",
                 full_name="Naufal",
+                identity_number=None,
+                identity_document="naufal-ktm.pdf",
                 is_active=True,
                 password_hash=get_password_hash("naufal123"),
                 role=Role.CIVITAS,
@@ -36,6 +40,8 @@ async def seed_data():
             user3 = UserModel(
                 email="syafiq@apps.ipb.ac.id",
                 full_name="Syafiq",
+                identity_number=None,
+                identity_document=None,
                 is_active=True,
                 password_hash=get_password_hash("syafiq123"),
                 role=Role.ADMIN,

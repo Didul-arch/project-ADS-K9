@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.routers.auth_router import get_current_user
-from app.api.v1.schemas.user_schema import UserResponse
-from app.domains.user.entity import UserEntity
+from app.api.v1.schemas.user_schema import UserResponse, UserPublicResponse
+from app.domains.user.entity import UserEntity, Role
 from app.domains.user.service import UserService
 from app.infrastructure.db.session import get_db
 from app.infrastructure.repositories.user_repository import UserRepository
@@ -23,16 +23,42 @@ def to_user_response(user: UserEntity) -> UserResponse:
     )
 
 
-@router.get("/users/", response_model=list[UserResponse])
+def to_user_public_response(user: UserEntity) -> UserPublicResponse:
+    return UserPublicResponse(
+        id=user.id,
+        fullname=user.fullname,
+    )
+
+
+@router.get("/users/", response_model=list[UserPublicResponse])
 async def list_users(db: AsyncSession = Depends(get_db)):
     repo = UserRepository(db)
     service = UserService(repo)
     users = await service.get_all_users()
-    return [to_user_response(user) for user in users]
+    return [to_user_public_response(user) for user in users]
 
 
-@router.get("/users/{user_id}", response_model=UserResponse)
+@router.get("/users/{user_id}", response_model=UserPublicResponse)
 async def get_user_detail(user_id: int, db: AsyncSession = Depends(get_db)):
+    repo = UserRepository(db)
+    service = UserService(repo)
+    user = await service.get_user_by_id(user_id)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User tidak ditemukan")
+
+    return to_user_public_response(user)
+
+
+@router.get("/admin/users/{user_id}", response_model=UserResponse)
+async def get_user_detail_admin(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserEntity = Depends(get_current_user),
+):
+    if current_user.role != Role.ADMIN:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
     repo = UserRepository(db)
     service = UserService(repo)
     user = await service.get_user_by_id(user_id)
