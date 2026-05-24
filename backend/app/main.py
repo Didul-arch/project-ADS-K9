@@ -4,7 +4,6 @@ import time
 from pathlib import Path
 
 # Import Infrastruktur (Database & Session)
-from app.infrastructure.db.session import engine, Base
 from app.api.v1.routers.auth_router import router as auth_router
 from app.api.v1.routers.claim_router import router as claim_router
 from app.api.v1.routers.item_router import router as item_router
@@ -44,9 +43,6 @@ async def add_process_time_header(request: Request, call_next):
 @app.on_event("startup")
 async def startup():
     Path(settings.CLAIM_UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    print("Tables Synced!")
 
 @app.get("/")
 def read_root():

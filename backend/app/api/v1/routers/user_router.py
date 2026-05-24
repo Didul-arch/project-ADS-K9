@@ -17,6 +17,9 @@ def to_user_response(user: UserEntity) -> UserResponse:
         email=user.email,
         fullname=user.fullname,
         is_active=user.is_active,
+        role=user.role.value if hasattr(user.role, 'value') else str(user.role),
+        identity_number=getattr(user, 'identity_number', None),
+        identity_document=getattr(user, 'identity_document', None),
     )
 
 

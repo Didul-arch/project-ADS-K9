@@ -11,6 +11,8 @@ class UserRepository:
         return UserEntity(
             id=db_user.id,
             email=db_user.email,
+            identity_number=db_user.identity_number,
+            identity_document=db_user.identity_document,
             fullname=db_user.full_name,
             password_hashed=db_user.password_hash,
             role=db_user.role,
@@ -50,6 +52,8 @@ class UserRepository:
         new_user = UserModel(
             email=user.email,
             full_name=user.fullname,
+            identity_number=user.identity_number,
+            identity_document=user.identity_document,
             is_active=user.is_active,
             password_hash=user.password_hashed,
             role=user.role or Role.UMUM,

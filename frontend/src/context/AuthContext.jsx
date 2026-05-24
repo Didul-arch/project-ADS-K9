@@ -75,12 +75,19 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
   };
 
-  const signUp = async (name, email, password) => {
+  const signUp = async (name, email, password, identityNumber = null, identityDocumentFile = null) => {
     try {
-      const res = await apiJson('/users/', {
-        method: 'POST',
-        body: { email: email.trim(), fullname: name, password }
-      });
+      // Backend CreateUserRequest expects JSON fields. If user provided a file,
+      // we include only the filename in `identity_document` (server doesn't accept multipart here).
+      const payload = {
+        email: email.trim(),
+        fullname: name,
+        password,
+        identity_number: identityNumber || null,
+        identity_document: identityDocumentFile ? identityDocumentFile.name : null,
+      };
+
+      const res = await apiJson('/users/', { method: 'POST', body: payload });
 
       if (!res.ok) return false;
 

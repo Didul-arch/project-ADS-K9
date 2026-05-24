@@ -11,6 +11,8 @@ const SignUp = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [identityNumber, setIdentityNumber] = useState('');
+  const [identityDocumentFile, setIdentityDocumentFile] = useState(null);
   
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -41,7 +43,22 @@ const SignUp = () => {
       return;
     }
 
-    const success = await signUp(name, email, password);
+    // 3. For IPB civitas, require at least one identity field
+    const isCivitas = emailLower.endsWith('@apps.ipb.ac.id') || emailLower.endsWith('@ipb.ac.id');
+    if (isCivitas) {
+      const idNum = (identityNumber || '').toString().trim();
+      const idDoc = identityDocumentFile;
+      if (!idNum && !idDoc) {
+        setErrorMsg(
+          language === 'en'
+            ? 'Please provide either your identity number or upload an identity document.'
+            : 'Silakan isi NIM/NIP atau unggah dokumen identitas.'
+        );
+        return;
+      }
+    }
+
+    const success = await signUp(name, email, password, identityNumber || null, identityDocumentFile || null);
     if (success) {
       navigate('/dashboard');
     } else {
@@ -156,6 +173,32 @@ const SignUp = () => {
               onChange={(e) => setEmail(e.target.value)}
               required 
             />
+          </div>
+
+          {/* Identity (either number OR upload) */}
+          <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <label style={{ fontSize: '14px' }}>Identity (fill one)</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="NIM / NIP / ID Number"
+                value={identityNumber}
+                onChange={(e) => setIdentityNumber(e.target.value)}
+                style={{ flex: 1 }}
+              />
+
+              <div style={{ width: '36px', textAlign: 'center', color: 'var(--text-secondary)', fontWeight: '700' }}>or</div>
+
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                className="form-input"
+                onChange={(e) => setIdentityDocumentFile(e.target.files && e.target.files[0])}
+                style={{ flex: 1 }}
+              />
+            </div>
+            <small style={{ color: 'var(--text-secondary)' }}>Provide either identity number or upload an identity document.</small>
           </div>
 
 
