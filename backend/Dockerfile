@@ -19,6 +19,9 @@ COPY ./app ./app
 # Copy Alembic config and migrations so we can run migrations inside the container
 COPY ./alembic.ini ./alembic.ini
 COPY ./alembic ./alembic
+COPY ./entrypoint.sh ./entrypoint.sh
 
-# 5. Command to run the app using Uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+RUN chmod +x ./entrypoint.sh
+
+# 5. Run migrations first, then start the app
+ENTRYPOINT ["/app/entrypoint.sh"]
