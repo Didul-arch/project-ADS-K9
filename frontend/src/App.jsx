@@ -11,6 +11,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import UserManagement from './pages/UserManagement';
+import UserProfile from './pages/UserProfile';
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider } from './context/AuthContext';
 import { SearchProvider } from './context/SearchContext';
@@ -39,6 +40,7 @@ function App() {
                         <Route path="/claim/:id" element={<Claim />} />
                         <Route path="/history" element={<History />} />
                         <Route path="/users" element={<UserManagement />} />
+                        <Route path="/users/:id" element={<UserProfile />} />
                       </Routes>
                     </main>
                   </div>

@@ -242,57 +242,8 @@ const Login = () => {
             {t("createAccount")}
           </Link>
         </p>
-
-        {/* Discreet Dev Tools Autofill */}
-        <div
-          style={{
-            textAlign: "center",
-            marginTop: "20px",
-            fontSize: "12px",
-            color: "var(--text-secondary)",
-          }}
-        >
-          Dev Autofills:
-          <button
-            type="button"
-            onClick={() => {
-              setEmail("luqman@apps.ipb.ac.id");
-              setPassword("luqman123");
-            }}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#4F46E5",
-              cursor: "pointer",
-              margin: "0 6px",
-              fontWeight: 600,
-              textDecoration: "underline",
-            }}
-          >
-            Luqman (Student)
-          </button>{" "}
-          |
-          <button
-            type="button"
-            onClick={() => {
-              setEmail("syafiq@apps.ipb.ac.id");
-              setPassword("syafiq123");
-            }}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#4F46E5",
-              cursor: "pointer",
-              margin: "0 6px",
-              fontWeight: 600,
-              textDecoration: "underline",
-            }}
-          >
-            Syafiq (Admin)
-          </button>
-        </div>
       </div>
-
+      
       {/* Right Column: Visual */}
       <div
         style={{

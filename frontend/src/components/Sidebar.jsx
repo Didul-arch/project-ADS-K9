@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, Search, PlusCircle, Layout, Clock, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, Search, PlusCircle, Layout, Clock, LogOut, ChevronLeft, ChevronRight, User } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -38,6 +38,7 @@ const Sidebar = () => {
     { icon: <PlusCircle size={20} />, label: t('report'), path: '/report' },
     { icon: <Layout size={20} />, label: t('dashboard'), path: '/dashboard' },
     { icon: <Clock size={20} />, label: t('history'), path: '/history' },
+    { icon: <User size={20} />, label: 'My Profile', path: '/users/me' },
   ];
 
   const adminMenuItems = [
@@ -46,6 +47,7 @@ const Sidebar = () => {
     { icon: <PlusCircle size={20} />, label: 'Report', path: '/report' },
     { icon: <Clock size={20} />, label: 'System Logs', path: '/history' },
     { icon: <Home size={20} />, label: 'User Management', path: '/users' },
+    { icon: <User size={20} />, label: 'My Profile', path: '/users/me' },
   ];
 
   const menuItems = user?.role === 'Admin' ? adminMenuItems : userMenuItems;
@@ -65,11 +67,11 @@ const Sidebar = () => {
       boxShadow: '0px 18px 40px rgba(112, 144, 176, 0.12)'
     }}>
       {/* Dynamic Logo Header */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        marginBottom: '40px', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: '40px',
         padding: '0 5px',
         height: '45px',
         overflow: 'hidden'
@@ -89,38 +91,38 @@ const Sidebar = () => {
             boxShadow: '0 4px 10px rgba(0, 0, 0, 0.05)',
             flexShrink: 0
           }}>
-            <img 
-              src={ipbLogoRound} 
-              alt="IPB" 
-              style={{ 
-                width: '100%', 
-                height: '100%', 
+            <img
+              src={ipbLogoRound}
+              alt="IPB"
+              style={{
+                width: '100%',
+                height: '100%',
                 objectFit: 'contain'
-              }} 
+              }}
             />
           </div>
         ) : (
           /* Full Horizontal IPB Logo + Stylized FoundIT Text Branding */
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
+            style={{
+              display: 'flex',
+              alignItems: 'center',
               gap: '10px',
               width: '100%',
               justifyContent: 'flex-start'
             }}
           >
-            <img 
-              src={ipbLogoRound} 
-              alt="IPB" 
-              style={{ 
-                width: '38px', 
-                height: '38px', 
+            <img
+              src={ipbLogoRound}
+              alt="IPB"
+              style={{
+                width: '38px',
+                height: '38px',
                 objectFit: 'contain',
                 flexShrink: 0
-              }} 
+              }}
             />
             <div style={{ display: 'flex', alignItems: 'center', letterSpacing: '0.2px' }}>
               <span style={{ color: 'var(--ipb-blue)', fontWeight: '600', fontSize: '22px' }}>Found</span>
@@ -180,15 +182,15 @@ const Sidebar = () => {
                   boxShadow: isActive ? '0px 10px 20px rgba(112, 144, 176, 0.12)' : 'none',
                 })}
               >
-                <span style={{ 
-                  color: 'var(--ipb-blue)', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center' 
+                <span style={{
+                  color: 'var(--ipb-blue)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}>
                   {item.icon}
                 </span>
-                
+
                 <AnimatePresence>
                   {!isCollapsed && (
                     <motion.span
@@ -210,19 +212,19 @@ const Sidebar = () => {
 
       {/* Logout Footer (Only shown for logged-in users) */}
       {user && (
-        <div style={{ 
-          borderTop: '1px solid var(--glass-border)', 
+        <div style={{
+          borderTop: '1px solid var(--glass-border)',
           paddingTop: '20px',
           display: 'flex',
           justifyContent: 'center'
         }}>
-          <button 
-            onClick={handleLogout} 
-            className="btn" 
+          <button
+            onClick={handleLogout}
+            className="btn"
             title={isCollapsed ? t('signOut') : ''}
-            style={{ 
-              width: '100%', 
-              justifyContent: isCollapsed ? 'center' : 'flex-start', 
+            style={{
+              width: '100%',
+              justifyContent: isCollapsed ? 'center' : 'flex-start',
               color: '#EE5D50',
               padding: isCollapsed ? '14px' : '12px 24px',
               borderRadius: '16px',

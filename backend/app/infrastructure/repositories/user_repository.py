@@ -46,6 +46,50 @@ class UserRepository:
         db_users = result.scalars().all()
         return [self._to_entity(db_user) for db_user in db_users]
 
+    async def update(
+        self,
+        user_id: int,
+        fullname: str | None = None,
+        role: Role | None = None,
+        is_active: bool | None = None,
+        identity_number: str | None = None,
+        identity_document: str | None = None,
+    ) -> UserEntity | None:
+        db_user = await self.db.get(UserModel, user_id)
+
+        if not db_user:
+            return None
+
+        if fullname is not None:
+            db_user.full_name = fullname
+        if role is not None:
+            db_user.role = role
+        if is_active is not None:
+            db_user.is_active = is_active
+        if identity_number is not None:
+            db_user.identity_number = identity_number
+        if identity_document is not None:
+            db_user.identity_document = identity_document
+
+        try:
+            await self.db.commit()
+            await self.db.refresh(db_user)
+        except IntegrityError:
+            await self.db.rollback()
+            raise ValueError("Gagal memperbarui user.")
+
+        return self._to_entity(db_user)
+
+    async def delete(self, user_id: int) -> bool:
+        db_user = await self.db.get(UserModel, user_id)
+
+        if not db_user:
+            return False
+
+        await self.db.delete(db_user)
+        await self.db.commit()
+        return True
+
     async def create(self, user: UserEntity) -> UserEntity:
         if not user.password_hashed.strip():
             raise ValueError("password_hash tidak boleh kosong.")

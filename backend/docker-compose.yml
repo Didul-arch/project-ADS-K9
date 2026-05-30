@@ -1,3 +1,4 @@
+name: ads_project_backend
 services:
   # 1. Service untuk Backend
   ads_backend:

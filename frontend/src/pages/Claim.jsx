@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowLeft, CheckCircle, Upload, X } from 'lucide-react';
-import Navbar from '../components/Navbar';
-import { useLanguage } from '../context/LanguageContext';
-import { useAuth } from '../context/AuthContext';
-import { apiJson } from '../lib/api';
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { ArrowLeft, CheckCircle, Upload, X } from "lucide-react";
+import Navbar from "../components/Navbar";
+import { useLanguage } from "../context/LanguageContext";
+import { useAuth } from "../context/AuthContext";
+import { apiJson } from "../lib/api";
 
 const Claim = () => {
   const { id } = useParams();
@@ -16,9 +16,9 @@ const Claim = () => {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
-  const [proofText, setProofText] = useState('');
+  const [proofText, setProofText] = useState("");
   const [proofImage, setProofImage] = useState(null);
-  const [formError, setFormError] = useState('');
+  const [formError, setFormError] = useState("");
 
   const fileInputRef = useRef(null);
 
@@ -36,7 +36,7 @@ const Claim = () => {
         }
       })
       .catch((error) => {
-        console.error('Failed to fetch item for claim page', error);
+        console.error("Failed to fetch item for claim page", error);
         if (mounted) setItem(null);
       })
       .finally(() => {
@@ -50,59 +50,66 @@ const Claim = () => {
 
   useEffect(() => {
     if (!user && !loading) {
-      navigate('/login');
+      navigate("/login");
     }
   }, [user, loading, navigate]);
 
-  const baseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
-  const itemImage = item?.image && item.image.startsWith('/') ? `${baseUrl}${item.image}` : item?.image;
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+  const itemImage =
+    item?.image && item.image.startsWith("/")
+      ? `${baseUrl}${item.image}`
+      : item?.image;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!proofText.trim()) {
-      setFormError('Please describe why you believe this item belongs to you.');
+      setFormError("Please describe why you believe this item belongs to you.");
       return;
     }
 
     if (!proofImage) {
-      setFormError('Please upload a proof image before submitting the claim.');
+      setFormError("Please upload a proof image before submitting the claim.");
       return;
     }
 
-    setFormError('');
+    setFormError("");
 
     try {
       const formData = new FormData();
-      formData.append('proof_text', proofText.trim());
-      formData.append('item_id', String(item.id));
-      formData.append('proof_image', proofImage);
+      formData.append("proof_text", proofText.trim());
+      formData.append("item_id", String(item.id));
+      formData.append("proof_image", proofImage);
 
-      const res = await apiJson('/claims/', { method: 'POST', body: formData, token });
+      const res = await apiJson("/claims/", {
+        method: "POST",
+        body: formData,
+        token,
+      });
       if (res.ok) {
         setSubmitted(true);
       } else {
-        setFormError(res.data?.detail || 'Failed to submit claim.');
+        setFormError(res.data?.detail || "Failed to submit claim.");
       }
     } catch (error) {
-      console.error('Claim submit failed:', error);
-      setFormError('Failed to submit claim. Please try again.');
+      console.error("Claim submit failed:", error);
+      setFormError("Failed to submit claim. Please try again.");
     }
   };
 
   const clearFile = () => {
     setProofImage(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   if (loading) {
-    return <div style={{ padding: '40px' }}>Loading...</div>;
+    return <div style={{ padding: "40px" }}>Loading...</div>;
   }
 
   if (!item) {
-    return <div style={{ padding: '40px' }}>Item not found</div>;
+    return <div style={{ padding: "40px" }}>Item not found</div>;
   }
 
   if (submitted) {
@@ -112,18 +119,53 @@ const Claim = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <Navbar title={t('claimTitle')} />
-        <div className="glass" style={{ maxWidth: '720px', margin: '0 auto', background: 'white', padding: '40px', borderRadius: '28px', textAlign: 'center' }}>
-          <div style={{ width: '88px', height: '88px', borderRadius: '50%', margin: '0 auto 20px', background: '#E2F9EB', color: '#01B574', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Navbar title={t("claimTitle")} />
+        <div
+          className="glass"
+          style={{
+            maxWidth: "720px",
+            margin: "0 auto",
+            background: "white",
+            padding: "40px",
+            borderRadius: "28px",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              width: "88px",
+              height: "88px",
+              borderRadius: "50%",
+              margin: "0 auto 20px",
+              background: "#E2F9EB",
+              color: "#01B574",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <CheckCircle size={42} />
           </div>
-          <h2 style={{ marginBottom: '12px' }}>{t('claimSuccess')}</h2>
-          <p style={{ marginBottom: '28px', color: 'var(--text-secondary)' }}>{t('claimSuccessDesc')}</p>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <h2 style={{ marginBottom: "12px" }}>{t("claimSuccess")}</h2>
+          <p style={{ marginBottom: "28px", color: "var(--text-secondary)" }}>
+            {t("claimSuccessDesc")}
+          </p>
+          <div
+            style={{
+              display: "flex",
+              gap: "12px",
+              justifyContent: "center",
+              flexWrap: "wrap",
+            }}
+          >
             <Link className="btn btn-primary" to={`/detail/${item.id}`}>
               Back to item
             </Link>
-            <button className="btn" onClick={() => navigate('/browse')} style={{ background: '#F4F7FE', color: 'var(--text-secondary)' }}>
+            <button
+              className="btn"
+              onClick={() => navigate("/browse")}
+              style={{ background: "#F4F7FE", color: "var(--text-secondary)" }}
+            >
               Continue browsing
             </button>
           </div>
@@ -138,68 +180,181 @@ const Claim = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Navbar title={t('claimTitle')} />
+      <Navbar title={t("claimTitle")} />
 
-      <Link to={`/detail/${item.id}`} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', marginBottom: '24px', width: 'fit-content' }}>
+      <Link
+        to={`/detail/${item.id}`}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          color: "var(--text-secondary)",
+          marginBottom: "24px",
+          width: "fit-content",
+        }}
+      >
         <ArrowLeft size={20} />
         Back to item
       </Link>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px' }}>
-        <div className="glass" style={{ background: 'white', padding: '28px', borderRadius: '28px', boxShadow: '0px 18px 40px rgba(112, 144, 176, 0.12)' }}>
-          <h2 style={{ marginBottom: '16px' }}>{t('claimTitle')}</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>{t('claimFormIntro')}</p>
+      <div
+        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "28px" }}
+      >
+        <div
+          className="glass"
+          style={{
+            background: "white",
+            padding: "28px",
+            borderRadius: "28px",
+            boxShadow: "0px 18px 40px rgba(112, 144, 176, 0.12)",
+          }}
+        >
+          <h2 style={{ marginBottom: "16px" }}>
+            {(item.report_type || item.type) === "lost"
+              ? "Found Item"
+              : "Claim Item"}
+          </h2>
+          <p style={{ color: "var(--text-secondary)", marginBottom: "24px" }}>
+            {(item.report_type || item.type) === "lost"
+              ? "Explain where and when you found this item, and provide specific details that prove your discovery."
+              : t("claimFormIntro")}
+          </p>
 
-          <div style={{ border: '1px solid #E0E5F2', borderRadius: '18px', overflow: 'hidden', marginBottom: '24px' }}>
-            <img src={itemImage} alt={item.title} style={{ width: '100%', height: '260px', objectFit: 'cover', display: 'block' }} />
-            <div style={{ padding: '18px' }}>
-              <p style={{ margin: '0 0 8px 0', color: 'var(--text-secondary)', fontSize: '13px' }}>{item.category} · {item.location}</p>
+          <div
+            style={{
+              border: "1px solid #E0E5F2",
+              borderRadius: "18px",
+              overflow: "hidden",
+              marginBottom: "24px",
+            }}
+          >
+            <img
+              src={itemImage}
+              alt={item.title}
+              style={{
+                width: "100%",
+                height: "260px",
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
+            <div style={{ padding: "18px" }}>
+              <p
+                style={{
+                  margin: "0 0 8px 0",
+                  color: "var(--text-secondary)",
+                  fontSize: "13px",
+                }}
+              >
+                {item.category} · {item.location}
+              </p>
               <h3 style={{ margin: 0 }}>{item.title}</h3>
-              <p style={{ margin: '10px 0 0 0', color: 'var(--text-secondary)' }}>{item.description}</p>
+              <p
+                style={{ margin: "10px 0 0 0", color: "var(--text-secondary)" }}
+              >
+                {item.description}
+              </p>
             </div>
           </div>
 
-          <div style={{ background: '#F4F7FE', padding: '18px', borderRadius: '18px', color: 'var(--text-secondary)', fontSize: '14px' }}>
-            Claim akan dikirim ke pemilik/penemu sebagai permintaan verifikasi. Siapkan detail spesifik dan bukti yang relevan.
+          <div
+            style={{
+              background: "#F4F7FE",
+              padding: "18px",
+              borderRadius: "18px",
+              color: "var(--text-secondary)",
+              fontSize: "14px",
+            }}
+          >
+            Request will be sent to the owner/finder as a verification request.
+            Prepare specific details and relevant proof.
           </div>
         </div>
 
-        <div className="glass" style={{ background: 'white', padding: '28px', borderRadius: '28px', boxShadow: '0px 18px 40px rgba(112, 144, 176, 0.12)' }}>
+        <div
+          className="glass"
+          style={{
+            background: "white",
+            padding: "28px",
+            borderRadius: "28px",
+            boxShadow: "0px 18px 40px rgba(112, 144, 176, 0.12)",
+          }}
+        >
           <form onSubmit={handleSubmit}>
-            <div className="form-group" style={{ marginBottom: '22px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>Why is this item yours? <span style={{ color: '#EE5D50' }}>*</span></label>
+            <div className="form-group" style={{ marginBottom: "22px" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "8px",
+                  fontWeight: 600,
+                }}
+              >
+                {(item.report_type || item.type) === "lost"
+                  ? "Where did you find this item?"
+                  : "Why is this item yours?"}
+                <span style={{ color: "#EE5D50" }}>*</span>
+              </label>
               <textarea
                 className="form-input"
-                placeholder={t('proofPlaceholder')}
+                placeholder={
+                  (item.report_type || item.type) === "lost"
+                    ? "Describe the exact location, time of discovery, and unique characteristics you noticed..."
+                    : t("proofPlaceholder")
+                }
                 value={proofText}
                 onChange={(e) => setProofText(e.target.value)}
                 required
-                style={{ minHeight: '160px', paddingTop: '12px' }}
+                style={{ minHeight: "160px", paddingTop: "12px" }}
               />
             </div>
 
-            <div className="form-group" style={{ marginBottom: '22px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>{t('proofImageLabel')} <span style={{ color: '#EE5D50' }}>*</span></label>
+            <div className="form-group" style={{ marginBottom: "22px" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "8px",
+                  fontWeight: 600,
+                }}
+              >
+                {t("proofImageLabel")}{" "}
+                <span style={{ color: "#EE5D50" }}>*</span>
+              </label>
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 className="form-input"
                 onChange={(e) => {
-                  const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+                  const file =
+                    e.target.files && e.target.files[0]
+                      ? e.target.files[0]
+                      : null;
                   setProofImage(file);
                 }}
                 required
               />
-              <p style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                {proofImage ? proofImage.name : t('proofImageHint')}
+              <p
+                style={{
+                  marginTop: "8px",
+                  fontSize: "12px",
+                  color: "var(--text-secondary)",
+                }}
+              >
+                {proofImage ? proofImage.name : t("proofImageHint")}
               </p>
               {proofImage && (
                 <button
                   type="button"
                   className="btn"
                   onClick={clearFile}
-                  style={{ marginTop: '10px', background: '#F4F7FE', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                  style={{
+                    marginTop: "10px",
+                    background: "#F4F7FE",
+                    color: "var(--text-secondary)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
                 >
                   <X size={16} />
                   Remove image
@@ -208,11 +363,24 @@ const Claim = () => {
             </div>
 
             {formError && (
-              <p style={{ marginBottom: '18px', color: '#EE5D50', fontSize: '13px', fontWeight: 600 }}>{formError}</p>
+              <p
+                style={{
+                  marginBottom: "18px",
+                  color: "#EE5D50",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                }}
+              >
+                {formError}
+              </p>
             )}
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '16px' }}>
-              {t('submitClaim')}
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ width: "100%", padding: "16px" }}
+            >
+              {t("submitClaim")}
             </button>
           </form>
         </div>
