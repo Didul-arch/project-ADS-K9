@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }) => {
 
       const dbUser = meResponse.data;
       console.log('Fetched user data:', dbUser);
-      
+
       // Map backend role enum to frontend roles:
       // Backend: 'admin', 'civitas', 'umum'
       // Frontend expects: 'Admin', 'Student'
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }) => {
         email: dbUser.email,
         name: dbUser.fullname,
         role: mappedRole,
-        nim: dbUser.identity_number,   
+        nim: dbUser.identity_number,
         department: dbUser.role === 'admin' ? 'Direktorat Sistem Informasi' : 'Ilmu Komputer'
       };
 
@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
   };
 
-  const signUp = async (name, email, password, identityNumber = null, identityDocumentFile = null) => {
+  const signUp = async (name, email, password, phoneNumber, identityNumber = null, identityDocumentFile = null) => {
     try {
       // Backend CreateUserRequest expects JSON fields. If user provided a file,
       // we include only the filename in `identity_document` (server doesn't accept multipart here).
@@ -82,6 +82,7 @@ export const AuthProvider = ({ children }) => {
         email: email.trim(),
         fullname: name,
         password,
+        phone_number: phoneNumber.trim(),
         identity_number: identityNumber || null,
         identity_document: identityDocumentFile ? identityDocumentFile.name : null,
       };
@@ -99,7 +100,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Backward compatible stub
-  const switchRole = () => {};
+  const switchRole = () => { };
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout, signUp, switchRole, loading }}>
