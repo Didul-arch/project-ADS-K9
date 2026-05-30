@@ -213,7 +213,13 @@ const Dashboard = () => {
             ) : claims.length === 0 ? (
               <p style={{ color: "var(--text-secondary)" }}>No claims yet.</p>
             ) : (
-              <div style={{ display: "grid", gap: "16px" }}>
+              <div
+                style={{
+                  display: "grid",
+                  gap: "16px",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
+                }}
+              >
                 {claims.map((claim) => {
                   const relatedItem = itemById.get(claim.item_id);
                   const imageUrl = getClaimImageUrl(claim.proof_image);
@@ -251,10 +257,19 @@ const Dashboard = () => {
                           </p>
                         </div>
                         <span
-                          className="badge badge-found"
-                          style={{ alignSelf: "start" }}
+                          className="badge"
+                          style={{
+                            alignSelf: "start",
+                            backgroundColor:
+                              claim.status === "rejected"
+                                ? "#EE5D50"
+                                : claim.status === "pending"
+                                  ? "#FDB022"
+                                  : "#01B574",
+                            color: "white",
+                          }}
                         >
-                          {claim.status}
+                          {claim.status.toUpperCase()}
                         </span>
                       </div>
 

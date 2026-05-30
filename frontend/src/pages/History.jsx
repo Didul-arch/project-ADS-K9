@@ -150,16 +150,6 @@ const History = () => {
                           gap: "16px",
                         }}
                       >
-                        <img
-                          src={activity.image}
-                          alt={activity.title}
-                          style={{
-                            width: "50px",
-                            height: "50px",
-                            borderRadius: "12px",
-                            objectFit: "cover",
-                          }}
-                        />
                         <div>
                           <p
                             style={{
@@ -227,13 +217,13 @@ const History = () => {
                         </span>
                       </div>
                     </td>
-                    <td style={{ padding: "20px", textAlign: "right" }}>
+                    <td style={{ padding: "20px", textAlign: "left" }}>
                       <button
                         style={{
                           background: "transparent",
                           border: "none",
                           cursor: "pointer",
-                          color: "var(--text-secondary)",
+                          color: "var(--text-primary)",
                         }}
                         onClick={() => navigate(`/detail/${activity.id}`)}
                       >
