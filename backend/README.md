@@ -23,17 +23,13 @@ docker compose down
 docker compose up -d --build
 ```
 
-3. Migrasi Alembic sekarang jalan otomatis saat container backend start, jadi tidak perlu `down -v` atau menjalankan migrasi manual setiap deploy.
+3. Jalankan migrasi Alembic dari dalam container backend, bukan dari local machine:
+
+```bash
+docker compose exec ads_backend alembic upgrade head
+```
 
 4. Backend sudah siap diakses di `http://localhost:8000`.
-
-### Deploy ke Railway / Production
-
-- Jangan pakai `docker compose down -v` di production. Itu akan menghapus volume database.
-- Biarkan database tetap persisten, lalu deploy ulang aplikasi seperti biasa.
-- Container backend akan menjalankan `alembic upgrade head` sebelum server start.
-- Kalau kamu menambah migration baru, cukup commit migration file lalu push ke GitHub. Saat Railway redeploy, migrasi akan diterapkan otomatis.
-- Kalau perlu menjalankan migrasi manual, pakai `alembic upgrade head` di environment yang terhubung ke database production, bukan reset database.
 
 ### Mode lokal (opsional)
 
