@@ -6,6 +6,7 @@ from pathlib import Path
 # Import Infrastruktur (Database & Session)
 from app.api.v1.routers.auth_router import router as auth_router
 from app.api.v1.routers.claim_router import router as claim_router
+from app.api.v1.routers.notification_router import router as notification_router
 from app.api.v1.routers.item_router import router as item_router
 from app.api.v1.routers.user_router import router as user_router
 from app.infrastructure.config.settings import settings
@@ -29,6 +30,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(claim_router)
+app.include_router(notification_router)
 app.include_router(item_router)
 app.include_router(user_router)
 
