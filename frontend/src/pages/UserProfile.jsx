@@ -46,6 +46,7 @@ const UserProfile = () => {
     const [profile, setProfile] = useState(null);
     const [form, setForm] = useState({
         fullname: '',
+        phone_number: '',
         identity_number: '',
         role: 'umum',
         is_active: true,
@@ -87,6 +88,7 @@ const UserProfile = () => {
                 setProfile(data);
                 setForm({
                     fullname: data.fullname || '',
+                    phone_number: data.phone_number || '',
                     identity_number: data.identity_number || '',
                     role: data.role || 'umum',
                     is_active: Boolean(data.is_active),
@@ -171,6 +173,7 @@ const UserProfile = () => {
             const isSelfUpdate = isSelfRoute;
             const payload = new FormData();
             payload.append('fullname', form.fullname || '');
+            payload.append('phone_number', form.phone_number || '');
             payload.append('identity_number', form.identity_number || '');
 
             if (!isSelfUpdate) {
@@ -318,6 +321,27 @@ const UserProfile = () => {
                             </label>
 
                             <label style={{ display: 'grid', gap: '8px' }}>
+                                <span style={{ fontSize: '14px', fontWeight: '700', color: '#374151' }}>Phone Number</span>
+                                <input
+                                    value={form.phone_number}
+                                    onChange={(event) => handleChange('phone_number', event.target.value)}
+                                    placeholder="Nomor WhatsApp / Telepon"
+                                    style={{
+                                        width: '100%',
+                                        border: '1px solid #dbe4ee',
+                                        borderRadius: '14px',
+                                        padding: '14px 16px',
+                                        fontSize: '15px',
+                                        outline: 'none',
+                                        background: '#fbfdff',
+                                    }}
+                                />
+                                <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                                    Contoh: 0812xxxxxxxx atau +628xxxxxxxxxx
+                                </span>
+                            </label>
+
+                            <label style={{ display: 'grid', gap: '8px' }}>
                                 <span style={{ fontSize: '14px', fontWeight: '700', color: '#374151' }}>Identity Number</span>
                                 <input
                                     value={form.identity_number}
@@ -343,6 +367,7 @@ const UserProfile = () => {
                                     </span>
                                 )}
                             </label>
+
 
                             <label style={{ display: 'grid', gap: '8px' }}>
                                 <span style={{ fontSize: '14px', fontWeight: '700', color: '#374151' }}>Identity Document</span>
@@ -479,6 +504,7 @@ const UserProfile = () => {
                             </div>
                             <div style={{ display: 'grid', gap: '12px' }}>
                                 <Row label="Email" value={profile?.email || '-'} icon={<Mail size={16} />} />
+                                <Row label="Phone" value={profile?.phone_number || '-'} icon={<User size={16} />} />
                                 <Row label="Role" value={profile?.role || '-'} icon={<ShieldCheck size={16} />} />
                                 <Row label="Status" value={profile?.is_active ? 'Active' : 'Suspended'} icon={<BadgeInfo size={16} />} />
                             </div>
