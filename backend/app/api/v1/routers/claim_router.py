@@ -20,6 +20,8 @@ from app.infrastructure.db.models.item_model import ItemModel
 
 from app.api.v1.routers.auth_router import get_current_user  # Adjust path if your folder layout is different
 from app.domains.user.entity import UserEntity, Role
+from app.domains.notification.service import NotificationService
+from app.infrastructure.repositories.notification_repository import NotificationRepository
 
 router = APIRouter()
 
@@ -120,6 +122,8 @@ async def create_claim(
 		claim = await service.submit_claim(build_claim(request_type, proof_text, image_path, item_id, current_user.id))
 		history_repo = ActivityHistoryRepository(db)
 		await history_repo.create_request_entry(current_user.id, claim, item)
+		notification_service = NotificationService(NotificationRepository(db))
+		await notification_service.create_for_claim_submission(claim, item.reporter_id, item.title)
 		return {"status": "success", "data": claim}
 	except ValueError as e:
 		raise HTTPException(status_code=400, detail=str(e))
@@ -196,6 +200,9 @@ async def review_claim(
 
 	history_repo = ActivityHistoryRepository(db)
 	await history_repo.update_request_status_by_claim_id(claim_id, reviewed_claim.status.value)
+
+	notification_service = NotificationService(NotificationRepository(db))
+	await notification_service.create_for_claim_review(reviewed_claim)
 
 	return {"status": "success", "data": reviewed_claim}
 
