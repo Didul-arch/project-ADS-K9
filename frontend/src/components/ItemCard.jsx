@@ -4,15 +4,38 @@ import { Link } from "react-router-dom";
 
 const ItemCard = ({ item }) => {
   if (!item) return null;
+  
+  // Debug: log item structure to check what fields are available
+  console.log("ItemCard item:", item);
+  
   const baseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
   const imageUrl =
     item.image && item.image.startsWith("/")
       ? `${baseUrl}${item.image}`
       : item.image;
 
-  const getStatusClass = (status) => {
-    if (!status) return "";
-    switch (status.toLowerCase()) {
+  // Handle both report_type as string and as enum object
+  const getReportType = () => {
+    if (!item.report_type) return null;
+    
+    // If it's already a string, return it
+    if (typeof item.report_type === 'string') {
+      return item.report_type;
+    }
+    
+    // If it's an object with value property (enum), get the value
+    if (typeof item.report_type === 'object' && item.report_type.value) {
+      return item.report_type.value;
+    }
+    
+    return null;
+  };
+
+  const reportType = getReportType();
+
+  const getStatusClass = (report_type) => {
+    if (!report_type) return "";
+    switch (report_type.toLowerCase()) {
       case "lost":
         return "badge-lost";
       case "found":
@@ -45,8 +68,8 @@ const ItemCard = ({ item }) => {
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
           <div style={{ position: "absolute", top: "12px", left: "12px" }}>
-            <span className={`badge ${getStatusClass(item.status)}`}>
-              {item.status || "Unknown"}
+            <span className={`badge ${getStatusClass(reportType)}`}>
+              {reportType || "Unknown"}
             </span>
           </div>
         </div>
@@ -69,8 +92,8 @@ const ItemCard = ({ item }) => {
               marginBottom: "12px",
             }}
           >
-            <span className={`badge ${getStatusClass(item.status)}`}>
-              {item.status || "Unknown"}
+            <span className={`badge ${getStatusClass(reportType)}`}>
+              {reportType || "Unknown"}
             </span>
             <h3 style={{ margin: 0 }}>{item.title || "Untitled Item"}</h3>
           </div>
