@@ -3,10 +3,8 @@ from datetime import datetime
 from enum import Enum
 
 class ItemStatus(str, Enum):
-    LOST = "lost"
-    FOUND = "found"
-    CLAIMED = "claimed"
-
+    NOT_RETURNED = "not-returned"
+    RETURNED = "returned"
 
 class ReportType(str, Enum):
     LOST = "lost"
@@ -28,8 +26,7 @@ class ItemEntity:
     reporter_id: int
     created_at: datetime
 
-    #contoh untuk ubah status dari found -> claimed
-    def mark_as_claimed(self):
-        if self.status != ItemStatus.FOUND:
-            raise ValueError("Item belum ditemukan!")
-        self.status = ItemStatus.CLAIMED
+    def mark_as_returned(self):
+        if self.status != ItemStatus.NOT_RETURNED:
+            raise ValueError("Item sudah returned atau statusnya tidak valid.")
+        self.status = ItemStatus.RETURNED

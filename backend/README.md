@@ -1,4 +1,4 @@
-# Backend SIPESAT - Lost and Found IPB
+# Backend FoundIt - Lost and Found IPB
 
 ## Tech Stack
 
@@ -63,50 +63,4 @@ python -m app.seed
 - `DELETE /users/{user_id}` - hapus user untuk admin.
 - `POST /items/report` - melaporkan barang hilang.
 - `GET /items/` - menampilkan daftar item.
-
-## Checklist Feature Progress
-
-### A. Core Lost and Found
-
-- [x] Lapor barang hilang.
-- [ ] Lapor barang ditemukan.
-- [x] Lihat daftar barang.
-- [ ] Lihat detail barang.
-- [ ] Proses claim barang.
-- [ ] Alur perubahan status item (`lost/found/claimed`) konsisten via API.
-
-### B. Authentication dan Verifikasi Identitas
-
-- [ ] Login mahasiswa IPB (`@apps.ipb.ac.id`).
-- [ ] Token authentication (JWT).
-- [ ] Guest mode dengan pembatasan hak akses.
-- [ ] Upload dokumen identitas (KTM/KTP).
-- [ ] Verifikasi identitas oleh admin/petugas.
-
-### C. RBAC
-
-- [ ] Definisi role (`guest`, `student`, `verified_student`, `admin`, `super_admin`).
-- [ ] Matriks permission per role.
-- [ ] Proteksi endpoint berbasis role.
-- [ ] Riwayat perubahan role.
-
-### D. Admin AAA
-
-Authentication:
-
-- [ ] Login admin aman.
-- [ ] Password hashing dan kebijakan password.
-- [ ] Opsi MFA.
-
-Authorization:
-
-- [ ] Permission matrix admin.
-- [ ] Penerapan least privilege.
-- [ ] Persetujuan aksi kritikal.
-
-Accounting:
-
-- [ ] Audit log aktivitas admin.
-- [ ] Pencatatan aktor, aksi, target, waktu, IP, user agent.
-- [ ] Pencarian/filter log.
-- [ ] Ekspor log untuk audit internal.
+untuk endpoint selengkapnya bisa ke endpoint /docs di web browser kesayangan kalian.

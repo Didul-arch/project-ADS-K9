@@ -55,6 +55,7 @@ class UserService:
         self,
         user_id: int,
         fullname: str | None = None,
+        phone_number: str | None = None,
         role: Role | None = None,
         is_active: bool | None = None,
         identity_number: str | None = None,
@@ -73,6 +74,7 @@ class UserService:
         updated_user = await self.user_repo.update(
             user_id,
             fullname=fullname,
+            phone_number=phone_number,
             role=role,
             is_active=is_active,
             identity_number=identity_number,
@@ -88,6 +90,7 @@ class UserService:
         self,
         current_user: UserEntity,
         fullname: str | None = None,
+        phone_number: str | None = None,
         identity_number: str | None = None,
         identity_document: str | None = None,
     ) -> UserEntity:
@@ -97,6 +100,7 @@ class UserService:
         return await self.update_user_profile(
             user_id=current_user.id,
             fullname=fullname,
+            phone_number=phone_number,
             identity_number=identity_number,
             identity_document=identity_document,
         )
@@ -108,6 +112,8 @@ class UserService:
             raise ValueError("Format email tidak valid.")
         if not user.password_hashed.strip():
             raise ValueError("Password wajib diisi.")
+        if not (user.phone_number or "").strip():
+            raise ValueError("Nomor telepon wajib diisi.")
 
         existing_user = await self.user_repo.get_by_email(user.email)
         if existing_user:
@@ -120,11 +126,13 @@ class UserService:
         else:
             user.role = Role.UMUM
 
-        # For civitas users, require at least one identity field
-        if user.role == Role.CIVITAS:
-            id_num = (user.identity_number or "").strip()
-            id_doc = (user.identity_document or "").strip()
-            if not id_num and not id_doc:
-                raise ValueError("Civitas users must provide either identity_number or identity_document")
+        user.phone_number = user.phone_number.strip()
+        if user.identity_number is not None:
+            user.identity_number = user.identity_number.strip() or None
+        if user.identity_document is not None:
+            user.identity_document = user.identity_document.strip() or None
+
+        if user.role == Role.CIVITAS and not (user.identity_number or user.identity_document):
+            raise ValueError("Civitas users must provide either identity_number or identity_document")
 
         return await self.user_repo.create(user)

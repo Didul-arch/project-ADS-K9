@@ -3,13 +3,14 @@ from datetime import datetime
 from sqlalchemy import String, Text, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import Mapped, mapped_column
 from app.infrastructure.db.session import Base
-from app.domains.claim.entity import ClaimStatus
+from app.domains.claim.entity import ClaimStatus, RequestType
 
 
 class ClaimModel(Base):
     __tablename__ = "claim"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    request_type: Mapped[RequestType] = mapped_column(Enum(RequestType), nullable=False, default=RequestType.CLAIM)
     proof_text: Mapped[str] = mapped_column(Text, nullable=False)
     proof_image: Mapped[str] = mapped_column(String(255), nullable=False)
     status: Mapped[ClaimStatus] = mapped_column(Enum(ClaimStatus), nullable=False, default=ClaimStatus.PENDING)

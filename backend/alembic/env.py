@@ -16,7 +16,7 @@ if BASE_DIR not in sys.path:
 # Import app modules using package root 'app' which matches Docker image layout (/app)
 from app.infrastructure.db.session import Base
 from app.infrastructure.config.settings import settings
-from app.infrastructure.db.models import claim_model, item_model, user_model  # noqa: F401
+from app.infrastructure.db.models import activity_history_model, claim_model, item_model, user_model  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

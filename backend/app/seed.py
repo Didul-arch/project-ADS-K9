@@ -1,27 +1,38 @@
-# ai generated heheh :p
 import asyncio
 from datetime import datetime, timezone
+
 from app.infrastructure.db.session import AsyncSessionLocal, engine, Base
 from app.infrastructure.db.models.user_model import UserModel
 from app.infrastructure.db.models.item_model import ItemModel
 from app.infrastructure.db.models.claim_model import ClaimModel
+
+from app.infrastructure.db.models.activity_history_model import ActivityHistoryModel
+from app.infrastructure.db.models.activity_history_model import ActivityHistoryKind
 from app.domains.item.entity import ItemStatus, ReportType
 from app.domains.user.entity import Role
+from app.domains.claim.entity import RequestType, ClaimStatus
+
 from app.infrastructure.auth.utils import get_password_hash
 
 async def seed_data():
     async with engine.begin() as conn:
         print("[DB] Reset database schema...")
+        # WARNING: Ini akan mereset semua tabel termasuk tabel alembic_version
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
     async with AsyncSessionLocal() as session:
         async with session.begin():
             print("[SEED] Memulai seeding data...")
+            now_naive = datetime.now(timezone.utc).replace(tzinfo=None)
 
+            # ==========================================
+            # 1. SEED USERS
+            # ==========================================
             user1 = UserModel(
                 email="syafiq@apps.ipb.ac.id",
                 full_name="Syafiq Syadidul Azmi",
+                phone_number="081234567890",
                 identity_number=None,
                 identity_document=None,
                 is_active=True,
@@ -31,6 +42,7 @@ async def seed_data():
             user2 = UserModel(
                 email="naufal@apps.ipb.ac.id",
                 full_name="Naufal Raya Pragata",
+                phone_number="081234567891",
                 identity_number=None,
                 identity_document=None,
                 is_active=True,
@@ -40,6 +52,7 @@ async def seed_data():
             user3 = UserModel(
                 email="budi@apps.ipb.ac.id",
                 full_name="Budi Santoso",
+                phone_number="081234567892",
                 identity_number="B2023001",
                 identity_document="budi-ktm.jpg",
                 is_active=True,
@@ -47,19 +60,22 @@ async def seed_data():
                 role=Role.CIVITAS,
             )
             session.add_all([user1, user2, user3])
+            await session.flush() # Flush agar id user ter-generate
 
-            await session.flush()
-
-            now_naive = datetime.now(timezone.utc).replace(tzinfo=None)
-
+            # ==========================================
+            # 2. SEED ITEMS
+            # ==========================================
             item1 = ItemModel(
                 title="Kunci Motor Honda",
                 description="Gantungan kunci IPB warna merah, ilang deket GWW.",
                 location="Parkiran GWW",
                 image="/images/items/kunci-motor-honda.jpg",
+                latitude=-6.5593,
+                longitude=106.7262,
                 report_type=ReportType.LOST,
-                status=ItemStatus.LOST,
+                status=ItemStatus.NOT_RETURNED,
                 reporter_id=user1.id,
+                category="Accessories",
                 created_at=now_naive,
             )
 
@@ -68,36 +84,76 @@ async def seed_data():
                 description="Warna hitam polos, 500ml. Ketemu di meja perpus LSI.",
                 location="Perpustakaan LSI",
                 image="/images/items/tumbler-tuku.jpg",
+                latitude=-6.5580,
+                longitude=106.7280,
                 report_type=ReportType.FOUND,
-                status=ItemStatus.FOUND,
+                status=ItemStatus.NOT_RETURNED,
                 reporter_id=user2.id,
+                category="Tumbler",
                 created_at=now_naive,
             )
+            session.add_all([item1, item2])
+            await session.flush() # Flush agar id item ter-generate
 
-            item3 = ItemModel(
-                title="Dompet Hitam",
-                description="Dompet kulit hitam berisi KTM dan kartu.",
-                location="Ruang Kuliah A101",
-                image="/images/items/dompet-hitam.jpg",
-                report_type=ReportType.LOST,
-                status=ItemStatus.LOST,
-                reporter_id=user3.id,
+            # ==========================================
+            # 3. SEED CLAIMS
+            # ==========================================
+            # Budi (user3) mencoba mengklaim Kunci Motor (item1) yang dilaporkan Syafiq
+            claim1 = ClaimModel(
+                proof_text="Ini kunci saya, saya lampirkan foto kunci cadangannya.",
+                proof_image="/images/claims/proof-kunci.jpg",
+                status=ClaimStatus.PENDING, # Misal enum PENDING
+                claimer_id=user3.id,
+                item_id=item1.id,
+                reviewer_id=None,
+                request_type=RequestType.CLAIM,
                 created_at=now_naive,
+                updated_at=now_naive,
+            )
+            session.add(claim1)
+            await session.flush() # Flush agar id claim ter-generate
+
+            # ==========================================
+            # 4. SEED ACTIVITY HISTORY
+            # ==========================================
+            # History 1: Pencatatan awal saat item1 dilaporkan
+            history1 = ActivityHistoryModel(
+                user_id=item1.reporter_id,
+                item_id=item1.id,
+                claim_id=None,
+                history_type=ActivityHistoryKind.REPORT,
+                request_type=None,
+                item_status=item1.status.value,
+                request_status=None,
+                report_type=item1.report_type.value,
+                title=item1.title,
+                description=item1.description,
+                location=item1.location,
+                category=item1.category,
+                image=item1.image,
+                created_at=item1.created_at,
             )
 
-            item4 = ItemModel(
-                title="Laptop Lenovo",
-                description="Laptop Lenovo ThinkPad, stiker di belakang.",
-                location="Laboratorium Komputasi",
-                image="/images/items/laptop-lenovo.jpg",
-                report_type=ReportType.FOUND,
-                status=ItemStatus.FOUND,
-                reporter_id=user2.id,
-                created_at=now_naive,
+            # History 2: Pencatatan saat Budi (user3) mengajukan klaim atas item1
+            history2 = ActivityHistoryModel(
+                user_id=claim1.claimer_id,
+                item_id=item1.id,
+                claim_id=claim1.id,
+                history_type=ActivityHistoryKind.REQUEST,
+                request_type=claim1.request_type,
+                item_status=item1.status.value,
+                request_status=claim1.status.value,
+                report_type=item1.report_type.value,
+                title=item1.title,
+                description=item1.description,
+                location=item1.location,
+                category=item1.category,
+                image=item1.image,
+                created_at=claim1.created_at,
             )
-
-            session.add_all([item1, item2, item3, item4])
-
+            
+            session.add_all([history1, history2])
+            
         print("[SUCCESS] Seeding selesai! Database sudah di-reset dan diisi ulang dari nol.")
 
 if __name__ == "__main__":
