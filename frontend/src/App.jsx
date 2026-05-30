@@ -16,6 +16,7 @@ import UserProfile from "./pages/UserProfile";
 
 import { LanguageProvider } from "./context/LanguageContext";
 import { AuthProvider } from "./context/AuthContext";
+import { NotificationsProvider } from "./context/NotificationsContext";
 import { SearchProvider } from "./context/SearchContext";
 import { ItemsProvider } from "./context/ItemsContext";
 
@@ -24,39 +25,41 @@ function App() {
     <AuthProvider>
       <SearchProvider>
         <LanguageProvider>
-          <ItemsProvider>
-            <Router>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<SignUp />} />
-                <Route
-                  path="/*"
-                  element={
-                    <div className="app-container">
-                      <Sidebar />
-                      <main className="main-content">
-                        <Routes>
-                          <Route path="/" element={<Home />} />
-                          <Route path="/dashboard" element={<Dashboard />} />
-                          <Route path="/browse" element={<Browse />} />
-                          <Route path="/report" element={<Report />} />
-                          <Route path="/detail/:id" element={<Detail />} />
-                          <Route path="/claim/:id" element={<Claim />} />
-                          <Route
-                            path="/detail-claim/:id"
-                            element={<DetailClaim />}
-                          />
-                          <Route path="/history" element={<History />} />
-                          <Route path="/users" element={<UserManagement />} />
-                          <Route path="/users/:id" element={<UserProfile />} />
-                        </Routes>
-                      </main>
-                    </div>
-                  }
-                />
-              </Routes>
-            </Router>
-          </ItemsProvider>
+          <NotificationsProvider>
+            <ItemsProvider>
+              <Router>
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<SignUp />} />
+                  <Route
+                    path="/*"
+                    element={
+                      <div className="app-container">
+                        <Sidebar />
+                        <main className="main-content">
+                          <Routes>
+                            <Route path="/" element={<Home />} />
+                            <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/browse" element={<Browse />} />
+                            <Route path="/report" element={<Report />} />
+                            <Route path="/detail/:id" element={<Detail />} />
+                            <Route path="/claim/:id" element={<Claim />} />
+                            <Route
+                              path="/detail-claim/:id"
+                              element={<DetailClaim />}
+                            />
+                            <Route path="/history" element={<History />} />
+                            <Route path="/users" element={<UserManagement />} />
+                            <Route path="/users/:id" element={<UserProfile />} />
+                          </Routes>
+                        </main>
+                      </div>
+                    }
+                  />
+                </Routes>
+              </Router>
+            </ItemsProvider>
+          </NotificationsProvider>
         </LanguageProvider>
       </SearchProvider>
     </AuthProvider>

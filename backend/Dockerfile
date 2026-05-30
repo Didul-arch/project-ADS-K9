@@ -21,4 +21,4 @@ COPY ./alembic.ini ./alembic.ini
 COPY ./alembic ./alembic
 
 # 5. Command to run the app using Uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000

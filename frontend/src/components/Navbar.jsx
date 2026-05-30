@@ -4,12 +4,20 @@ import { Search, Bell, User, Languages, LogOut, CheckCircle, Info, Shield, HelpC
 import { useLanguage } from '../context/LanguageContext';
 import { useSearch } from '../context/SearchContext';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationsContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Navbar = ({ title }) => {
   const { language, toggleLanguage, t } = useLanguage();
   const { searchQuery, setSearchQuery } = useSearch();
   const { user, logout, switchRole } = useAuth();
+  const {
+    notifications,
+    unreadCount,
+    loading: notificationsLoading,
+    markNotificationRead,
+    markAllNotificationsRead,
+  } = useNotifications();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -18,19 +26,6 @@ const Navbar = ({ title }) => {
 
   const notifRef = useRef(null);
   const profileRef = useRef(null);
-
-  const [notifications, setNotifications] = useState(() => {
-    const defaultNotifs = [
-      { id: 1, type: 'match', name: 'iPhone 13 Pro Max', time: '5m ago', read: false },
-      { id: 2, type: 'claim', name: 'Black Leather Wallet', time: '1h ago', read: false },
-      { id: 3, type: 'approved', name: 'Tumbler Hydro Flask', time: '2h ago', read: false },
-    ];
-    const local = localStorage.getItem('notifications');
-    const parsedLocal = local ? JSON.parse(local) : [];
-    return [...parsedLocal, ...defaultNotifs];
-  });
-
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -55,45 +50,79 @@ const Navbar = ({ title }) => {
     }
   };
 
-  const markAllRead = () => {
-    setNotifications(prev => {
-      const updated = prev.map(n => ({ ...n, read: true }));
-      // Save local ones back to localStorage
-      const localOnly = updated.filter(n => n.id > 10);
-      localStorage.setItem('notifications', JSON.stringify(localOnly));
-      return updated;
-    });
+  const formatRelativeTime = (value) => {
+    if (!value) return '';
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+
+    const diffMinutes = Math.round((date.getTime() - Date.now()) / 60000);
+    const absMinutes = Math.abs(diffMinutes);
+
+    if (absMinutes < 60) {
+      return diffMinutes < 0 ? `${absMinutes}m ago` : `in ${absMinutes}m`;
+    }
+
+    const diffHours = Math.round(diffMinutes / 60);
+    const absHours = Math.abs(diffHours);
+
+    if (absHours < 24) {
+      return diffHours < 0 ? `${absHours}h ago` : `in ${absHours}h`;
+    }
+
+    const diffDays = Math.round(diffHours / 24);
+    const absDays = Math.abs(diffDays);
+    return diffDays < 0 ? `${absDays}d ago` : `in ${absDays}d`;
   };
 
-  const handleNotifClick = (notif) => {
-    // Mark as read
-    setNotifications(prev => {
-      const updated = prev.map(n => n.id === notif.id ? { ...n, read: true } : n);
-      const localOnly = updated.filter(n => n.id > 10);
-      localStorage.setItem('notifications', JSON.stringify(localOnly));
-      return updated;
-    });
+  const getNotificationText = (notification) => {
+    const itemName = notification.title || notification.message || t('notifications');
+
+    if (notification.type === 'claim_submitted') {
+      return notification.message || t('notifClaim').replace('{name}', itemName);
+    }
+    if (notification.type === 'claim_approved') {
+      return notification.message || t('notifApproved').replace('{name}', itemName);
+    }
+    if (notification.type === 'claim_rejected') {
+      return notification.message || 'Your claim request was rejected.';
+    }
+    return notification.message || notification.title || '';
+  };
+
+  const getNotificationIcon = (notification) => {
+    if (notification.type === 'claim_approved') return <CheckCircle size={16} />;
+    if (notification.type === 'claim_rejected') return <Shield size={16} />;
+    if (notification.type === 'claim_submitted') return <UserCheck size={16} />;
+    return <Info size={16} />;
+  };
+
+  const getNotificationColor = (notification) => {
+    if (notification.type === 'claim_approved') return { bg: '#E2F9EB', fg: '#01B574' };
+    if (notification.type === 'claim_rejected') return { bg: '#FFE5E5', fg: '#EE5D50' };
+    if (notification.type === 'claim_submitted') return { bg: '#E1F0FE', fg: '#0075FF' };
+    return { bg: '#F4F7FE', fg: '#4B5563' };
+  };
+
+  const handleNotifClick = async (notification) => {
+    await markNotificationRead(notification.id);
     setShowNotif(false);
-    
-    // Navigate based on type
-    if (notif.type === 'match' || notif.type === 'approved') {
-      navigate('/browse');
-    } else if (notif.type === 'claim') {
-      navigate('/dashboard');
-    }
-  };
 
-  const getNotifText = (n) => {
-    if (n.type === 'match') {
-      return t('notifMatch').replace('{name}', n.name);
+    if (notification.related_claim_id) {
+      navigate(`/detail-claim/${notification.related_claim_id}`);
+      return;
     }
-    if (n.type === 'claim') {
-      return t('notifClaim').replace('{name}', n.name);
+
+    if (notification.related_item_id) {
+      navigate(`/detail/${notification.related_item_id}`);
+      return;
     }
-    if (n.type === 'approved') {
-      return t('notifApproved').replace('{name}', n.name);
+
+    if (notification.type === 'claim_submitted') {
+      navigate('/dashboard');
+    } else if (notification.type === 'claim_approved' || notification.type === 'claim_rejected') {
+      navigate('/history');
     }
-    return '';
   };
 
   return (
@@ -153,7 +182,7 @@ const Navbar = ({ title }) => {
         </div>
 
         {/* Language Switcher */}
-        <button 
+        <button
           onClick={toggleLanguage}
           style={{
             background: 'var(--bg-primary)',
@@ -176,7 +205,7 @@ const Navbar = ({ title }) => {
 
         {/* Active Notification Bell Button */}
         <div ref={notifRef} style={{ position: 'relative' }}>
-          <button 
+          <button
             onClick={() => {
               setShowNotif(!showNotif);
               setShowProfile(false);
@@ -219,7 +248,7 @@ const Navbar = ({ title }) => {
           {/* Glassmorphic Notification Dropdown */}
           <AnimatePresence>
             {showNotif && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 15 }}
@@ -245,8 +274,8 @@ const Navbar = ({ title }) => {
                     {t('notifications')}
                   </h3>
                   {unreadCount > 0 && (
-                    <button 
-                      onClick={markAllRead}
+                    <button
+                      onClick={markAllNotificationsRead}
                       style={{
                         background: 'transparent',
                         border: 'none',
@@ -265,27 +294,31 @@ const Navbar = ({ title }) => {
                 <hr style={{ border: 'none', borderTop: '1px solid #E0E5F2', margin: 0 }} />
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '250px', overflowY: 'auto' }}>
-                  {notifications.length === 0 ? (
+                  {notificationsLoading ? (
+                    <p style={{ textAlign: 'center', padding: '20px 0', fontSize: '14px' }}>
+                      Loading notifications...
+                    </p>
+                  ) : notifications.length === 0 ? (
                     <p style={{ textAlign: 'center', padding: '20px 0', fontSize: '14px' }}>
                       {t('noNotifications')}
                     </p>
                   ) : (
-                    notifications.map(n => (
-                      <div 
-                        key={n.id}
-                        onClick={() => handleNotifClick(n)}
+                    notifications.map(notification => (
+                      <div
+                        key={notification.id}
+                        onClick={() => handleNotifClick(notification)}
                         style={{
                           display: 'flex',
                           gap: '12px',
                           padding: '10px 12px',
                           borderRadius: '12px',
-                          background: n.read ? 'transparent' : 'rgba(6, 18, 92, 0.04)',
+                          background: notification.read ? 'transparent' : 'rgba(6, 18, 92, 0.04)',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease',
-                          borderLeft: n.read ? '3px solid transparent' : '3px solid var(--ipb-blue)'
+                          borderLeft: notification.read ? '3px solid transparent' : '3px solid var(--ipb-blue)'
                         }}
                         onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(6, 18, 92, 0.06)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = n.read ? 'transparent' : 'rgba(6, 18, 92, 0.04)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = notification.read ? 'transparent' : 'rgba(6, 18, 92, 0.04)'}
                       >
                         <div style={{
                           display: 'flex',
@@ -294,18 +327,18 @@ const Navbar = ({ title }) => {
                           width: '32px',
                           height: '32px',
                           borderRadius: '50%',
-                          background: n.type === 'approved' ? '#E2F9EB' : n.type === 'claim' ? '#FFE5E5' : '#E1F0FE',
-                          color: n.type === 'approved' ? '#01B574' : n.type === 'claim' ? '#EE5D50' : '#0075FF',
+                          background: getNotificationColor(notification).bg,
+                          color: getNotificationColor(notification).fg,
                           flexShrink: 0
                         }}>
-                          {n.type === 'approved' ? <CheckCircle size={16} /> : <Info size={16} />}
+                          {getNotificationIcon(notification)}
                         </div>
                         <div style={{ flex: 1 }}>
-                          <p style={{ fontSize: '13px', fontWeight: n.read ? 500 : 600, color: 'var(--text-primary)', margin: '0 0 2px 0', lineHeight: 1.4 }}>
-                            {getNotifText(n)}
+                          <p style={{ fontSize: '13px', fontWeight: notification.read ? 500 : 600, color: 'var(--text-primary)', margin: '0 0 2px 0', lineHeight: 1.4 }}>
+                            {getNotificationText(notification)}
                           </p>
                           <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                            {n.time}
+                            {formatRelativeTime(notification.createdAt)}
                           </span>
                         </div>
                       </div>
@@ -319,7 +352,7 @@ const Navbar = ({ title }) => {
 
         {/* Active Profile Circle Button */}
         <div ref={profileRef} style={{ position: 'relative' }}>
-          <div 
+          <div
             onClick={() => {
               setShowProfile(!showProfile);
               setShowNotif(false);
@@ -349,7 +382,7 @@ const Navbar = ({ title }) => {
           {/* Glassmorphic Profile Dropdown */}
           <AnimatePresence>
             {showProfile && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 15 }}
@@ -440,7 +473,7 @@ const Navbar = ({ title }) => {
                 {/* Conditional CTAs based on login state */}
                 {user ? (
                   /* Logout Button for Signed-In Users */
-                  <button 
+                  <button
                     onClick={() => {
                       logout();
                       setShowProfile(false);
@@ -471,7 +504,7 @@ const Navbar = ({ title }) => {
                 ) : (
                   /* Login and Signup Action CTAs for Guests */
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
-                    <button 
+                    <button
                       onClick={() => {
                         setShowProfile(false);
                         navigate('/login');
@@ -497,7 +530,7 @@ const Navbar = ({ title }) => {
                     >
                       {t('signIn')}
                     </button>
-                    <button 
+                    <button
                       onClick={() => {
                         setShowProfile(false);
                         navigate('/signup');
