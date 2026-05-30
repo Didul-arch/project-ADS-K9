@@ -6,35 +6,175 @@ import { useLanguage } from "../context/LanguageContext";
 import { useItems } from "../context/ItemsContext";
 import { Clock, CheckCircle, ChevronRight, HelpCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { apiJson } from "../lib/api";
 
 const History = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { language } = useLanguage();
   const { items: allItems } = useItems();
   const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const toFallbackHistory = (items) =>
+    items.map((item) => ({
+      id: item.id,
+      item_id: item.id,
+      claim_id: null,
+      kind: "report",
+      report_type: item.type,
+      request_type: null,
+      item_status: item.status ? item.status.toLowerCase() : null,
+      request_status: null,
+      title: item.title,
+      category: item.category,
+      created_at: item.date ? new Date(item.date).toISOString() : null,
+    }));
+
+  const getActivityLabel = (activity) => {
+    const kind = activity.kind || "report";
+    const requestType = activity.request_type || "";
+    const reportType = activity.report_type || activity.type || "";
+
+    if (kind === "request") {
+      if (requestType === "claim") {
+        return language === "en" ? "Claim Request" : "Permintaan Klaim";
+      }
+
+      if (requestType === "found") {
+        return language === "en"
+          ? "Found Item Request"
+          : "Permintaan Barang Temuan";
+      }
+
+      return language === "en" ? "Request" : "Permintaan";
+    }
+
+    if (reportType === "lost") {
+      return language === "en" ? "Reported Lost" : "Dilaporkan Hilang";
+    }
+
+    if (reportType === "found") {
+      return language === "en" ? "Reported Found" : "Dilaporkan Ditemukan";
+    }
+
+    return language === "en" ? "Reported Item" : "Laporan Barang";
+  };
+
+  const getActivityStatus = (activity) => {
+    const requestStatus = (activity.request_status || "").toLowerCase();
+    const itemStatus = (activity.item_status || "").toLowerCase();
+    const kind = activity.kind || "report";
+
+    if (kind === "request") {
+      if (requestStatus === "approved" && itemStatus === "returned") {
+        return language === "en" ? "Returned" : "Sudah Diambil";
+      }
+
+      if (requestStatus === "approved") {
+        return language === "en" ? "Approved" : "Disetujui";
+      }
+
+      if (requestStatus === "rejected") {
+        return language === "en" ? "Rejected" : "Ditolak";
+      }
+
+      if (requestStatus === "pending") {
+        return language === "en" ? "Pending" : "Menunggu";
+      }
+
+      return activity.request_status || (language === "en" ? "Active" : "Aktif");
+    }
+
+    if (itemStatus === "returned") {
+      return language === "en" ? "Completed" : "Selesai";
+    }
+
+    return language === "en" ? "Active" : "Aktif";
+  };
+
+  const getActivityDate = (activity) => {
+    const rawDate = activity.created_at || activity.date;
+    if (!rawDate) return "-";
+
+    const parsedDate = new Date(rawDate);
+    if (Number.isNaN(parsedDate.getTime())) return rawDate;
+
+    return parsedDate.toLocaleDateString(
+      language === "en" ? "en-US" : "id-ID",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      },
+    );
+  };
+
+  const getDetailPath = (activity) => {
+    if (activity.kind === "request") {
+      return `/detail-claim/${activity.claim_id || activity.id}`;
+    }
+
+    return `/detail/${activity.item_id || activity.id}`;
+  };
 
   useEffect(() => {
-    const stored = localStorage.getItem("reported_items");
-    const localOnly = stored ? JSON.parse(stored) : [];
+    let mounted = true;
 
-    if (user) {
-      const userFiltered = allItems.filter(
-        (item) =>
-          item.reporterEmail === user.email || item.reporterId === user.id,
-      );
-      setHistory(userFiltered);
-    } else {
-      const guestFiltered = allItems.filter(
-        (item) =>
-          localOnly.some((localItem) => localItem.id == item.id) ||
-          !item.reporterEmail ||
-          item.reporterEmail === "Guest" ||
-          item.reporterEmail.includes("@") === false,
-      );
-      setHistory(guestFiltered);
-    }
-  }, [user, allItems]);
+    const loadHistory = async () => {
+      setLoading(true);
+
+      try {
+        if (user && token) {
+          const response = await apiJson("/history/me", { token });
+          const payload = response.ok ? response.data?.data || [] : [];
+
+          if (!mounted) return;
+
+          setHistory(Array.isArray(payload) ? payload : []);
+          return;
+        }
+
+        const stored = localStorage.getItem("reported_items");
+        const localOnly = stored ? JSON.parse(stored) : [];
+        const guestFiltered = allItems.filter(
+          (item) =>
+            localOnly.some((localItem) => localItem.id == item.id) ||
+            !item.reporterEmail ||
+            item.reporterEmail === "Guest" ||
+            item.reporterEmail.includes("@") === false,
+        );
+
+        if (!mounted) return;
+
+        setHistory(toFallbackHistory(guestFiltered));
+      } catch (error) {
+        console.error("Failed to load history:", error);
+
+        if (!mounted) return;
+
+        if (user) {
+          const userFiltered = allItems.filter(
+            (item) =>
+              item.reporterEmail === user.email || item.reporterId === user.id,
+          );
+          setHistory(toFallbackHistory(userFiltered));
+        } else {
+          setHistory([]);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadHistory();
+
+    return () => {
+      mounted = false;
+    };
+  }, [user, token, allItems]);
 
   const titleText =
     language === "en" ? "My Activity History" : "Riwayat Aktivitas Saya";
@@ -71,7 +211,13 @@ const History = () => {
           <p>{descText}</p>
         </div>
 
-        {history.length > 0 ? (
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "60px 0" }}>
+            <p style={{ color: "var(--text-secondary)" }}>
+              {language === "en" ? "Loading history..." : "Memuat riwayat..."}
+            </p>
+          </div>
+        ) : history.length > 0 ? (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
@@ -176,16 +322,15 @@ const History = () => {
                           fontSize: "14px",
                           fontWeight: "600",
                           color:
-                            activity.activityType?.includes("Lost") ||
-                            activity.type === "lost"
-                              ? "#EE5D50"
-                              : "#01B574",
+                            (activity.kind || "report") === "request"
+                              ? "#0075FF"
+                              : activity.report_type === "lost" ||
+                                activity.type === "lost"
+                                ? "#EE5D50"
+                                : "#01B574",
                         }}
                       >
-                        {activity.activityType ||
-                          (activity.type === "lost"
-                            ? "Reported Lost"
-                            : "Reported Found")}
+                        {getActivityLabel(activity)}
                       </span>
                     </td>
                     <td style={{ padding: "20px" }}>
@@ -196,7 +341,7 @@ const History = () => {
                           fontWeight: "600",
                         }}
                       >
-                        {activity.activityDate || activity.date}
+                        {getActivityDate(activity)}
                       </p>
                     </td>
                     <td style={{ padding: "20px" }}>
@@ -207,13 +352,18 @@ const History = () => {
                           gap: "8px",
                         }}
                       >
-                        {activity.activityStatus === "Completed" ? (
+                        {[
+                          "Completed",
+                          "Selesai",
+                          "Returned",
+                          "Sudah Diambil",
+                        ].includes(getActivityStatus(activity)) ? (
                           <CheckCircle size={18} color="#01B574" />
                         ) : (
                           <Clock size={18} color="var(--ipb-gold)" />
                         )}
                         <span style={{ fontWeight: "600", fontSize: "14px" }}>
-                          {activity.activityStatus || "Active"}
+                          {getActivityStatus(activity)}
                         </span>
                       </div>
                     </td>
@@ -225,7 +375,7 @@ const History = () => {
                           cursor: "pointer",
                           color: "var(--text-primary)",
                         }}
-                        onClick={() => navigate(`/detail/${activity.id}`)}
+                        onClick={() => navigate(getDetailPath(activity))}
                       >
                         <ChevronRight size={20} />
                       </button>
