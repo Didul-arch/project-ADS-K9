@@ -10,6 +10,7 @@ import {
   Package,
   ShieldCheck,
   XCircle,
+  ChevronDown,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
@@ -25,6 +26,12 @@ const Dashboard = () => {
   const [claims, setClaims] = useState([]);
   const [claimsLoading, setClaimsLoading] = useState(false);
   const [reviewingId, setReviewingId] = useState(null);
+  const [selectedStatuses, setSelectedStatuses] = useState([
+    "pending",
+    "approved",
+    "rejected",
+  ]);
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
 
   const isAdmin = user?.role === "Admin";
 
@@ -47,6 +54,10 @@ const Dashboard = () => {
   const pendingClaims = claims.filter((claim) => claim.status === "pending");
   const approvedClaims = claims.filter((claim) => claim.status === "approved");
   const rejectedClaims = claims.filter((claim) => claim.status === "rejected");
+
+  const filteredClaims = claims.filter((claim) =>
+    selectedStatuses.includes(claim.status),
+  );
 
   const fetchClaims = async () => {
     if (!token) return;
@@ -194,24 +205,107 @@ const Dashboard = () => {
                 justifyContent: "space-between",
                 alignItems: "center",
                 marginBottom: "20px",
+                gap: "16px",
+                flexWrap: "wrap",
               }}
             >
               <h2 style={{ margin: 0 }}>Claims Queue</h2>
-              <button
-                className="btn"
-                onClick={fetchClaims}
-                disabled={claimsLoading}
+
+              <div
+                style={{ display: "flex", gap: "12px", alignItems: "center" }}
               >
-                {claimsLoading ? "Refreshing..." : "Refresh"}
-              </button>
+                <div style={{ position: "relative" }}>
+                  <button
+                    onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                    style={{
+                      background: "#F4F7FE",
+                      border: "1px solid #E0E5F2",
+                      padding: "10px 16px",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      fontWeight: 600,
+                      color: "var(--text-secondary)",
+                    }}
+                  >
+                    Status{" "}
+                    {selectedStatuses.length > 0 &&
+                      `(${selectedStatuses.length})`}
+                    <ChevronDown size={16} />
+                  </button>
+
+                  {statusDropdownOpen && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: 0,
+                        marginTop: "8px",
+                        background: "white",
+                        border: "1px solid #E0E5F2",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                        zIndex: 100,
+                        minWidth: "200px",
+                      }}
+                    >
+                      {["pending", "approved", "rejected"].map((status) => (
+                        <label
+                          key={status}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                            padding: "12px 16px",
+                            cursor: "pointer",
+                            borderBottom: "1px solid #F4F7FE",
+                            fontSize: "14px",
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedStatuses.includes(status)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedStatuses([
+                                  ...selectedStatuses,
+                                  status,
+                                ]);
+                              } else {
+                                setSelectedStatuses(
+                                  selectedStatuses.filter((s) => s !== status),
+                                );
+                              }
+                            }}
+                            style={{ cursor: "pointer" }}
+                          />
+                          <span style={{ textTransform: "capitalize" }}>
+                            {status}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  className="btn"
+                  onClick={fetchClaims}
+                  disabled={claimsLoading}
+                >
+                  {claimsLoading ? "Refreshing..." : "Refresh"}
+                </button>
+              </div>
             </div>
 
             {claimsLoading ? (
               <p style={{ color: "var(--text-secondary)" }}>
                 Loading claims...
               </p>
-            ) : claims.length === 0 ? (
-              <p style={{ color: "var(--text-secondary)" }}>No claims yet.</p>
+            ) : filteredClaims.length === 0 ? (
+              <p style={{ color: "var(--text-secondary)" }}>No claims found.</p>
             ) : (
               <div
                 style={{
@@ -220,7 +314,7 @@ const Dashboard = () => {
                   gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
                 }}
               >
-                {claims.map((claim) => {
+                {filteredClaims.map((claim) => {
                   const relatedItem = itemById.get(claim.item_id);
                   const imageUrl = getClaimImageUrl(claim.proof_image);
                   return (
