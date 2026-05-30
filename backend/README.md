@@ -57,12 +57,17 @@ python -m app.seed
 
 - `GET /` - health check.
 - `POST /users/` - membuat user.
+- `GET /users/` - daftar user untuk admin.
+- `PATCH /users/me` - update profil sendiri.
+- `PATCH /users/{user_id}` - update parsial user untuk admin.
+- `DELETE /users/{user_id}` - hapus user untuk admin.
 - `POST /items/report` - melaporkan barang hilang.
 - `GET /items/` - menampilkan daftar item.
 
 ## Checklist Feature Progress
 
 ### A. Core Lost and Found
+
 - [x] Lapor barang hilang.
 - [ ] Lapor barang ditemukan.
 - [x] Lihat daftar barang.
@@ -71,6 +76,7 @@ python -m app.seed
 - [ ] Alur perubahan status item (`lost/found/claimed`) konsisten via API.
 
 ### B. Authentication dan Verifikasi Identitas
+
 - [ ] Login mahasiswa IPB (`@apps.ipb.ac.id`).
 - [ ] Token authentication (JWT).
 - [ ] Guest mode dengan pembatasan hak akses.
@@ -78,6 +84,7 @@ python -m app.seed
 - [ ] Verifikasi identitas oleh admin/petugas.
 
 ### C. RBAC
+
 - [ ] Definisi role (`guest`, `student`, `verified_student`, `admin`, `super_admin`).
 - [ ] Matriks permission per role.
 - [ ] Proteksi endpoint berbasis role.
@@ -86,16 +93,19 @@ python -m app.seed
 ### D. Admin AAA
 
 Authentication:
+
 - [ ] Login admin aman.
 - [ ] Password hashing dan kebijakan password.
 - [ ] Opsi MFA.
 
 Authorization:
+
 - [ ] Permission matrix admin.
 - [ ] Penerapan least privilege.
 - [ ] Persetujuan aksi kritikal.
 
 Accounting:
+
 - [ ] Audit log aktivitas admin.
 - [ ] Pencatatan aktor, aksi, target, waktu, IP, user agent.
 - [ ] Pencarian/filter log.

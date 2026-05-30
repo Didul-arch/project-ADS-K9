@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from app.domains.user.entity import Role
+
 
 class CreateUserRequest(BaseModel):
     email: str
@@ -20,6 +22,14 @@ class UserResponse(BaseModel):
     fullname: str
     is_active: bool
     role: str
+    identity_number: str | None = None
+    identity_document: str | None = None
+
+
+class UpdateUserRequest(BaseModel):
+    fullname: str | None = None
+    role: Role | None = None
+    is_active: bool | None = None
     identity_number: str | None = None
     identity_document: str | None = None
 

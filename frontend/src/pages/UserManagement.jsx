@@ -1,11 +1,40 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiJson } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
-import { Search, Trash2, Shield, User } from 'lucide-react';
+import { Search, Trash2, Eye, ShieldCheck, CircleCheckBig } from 'lucide-react';
 import { motion } from 'framer-motion';
+
+const getDocumentFileName = (value) => {
+  if (!value) {
+    return '-';
+  }
+
+  const normalizedValue = value.split('?')[0].split('#')[0].replace(/\\/g, '/');
+  const lastSegment = normalizedValue.split('/').filter(Boolean).pop();
+
+  return decodeURIComponent(lastSegment || normalizedValue || value);
+};
+
+const getApiBaseUrl = () => (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+
+const getDocumentUrl = (value) => {
+  if (!value) {
+    return '';
+  }
+
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  return `${getApiBaseUrl()}${value}`;
+};
+
+const isPreviewableDocument = (value) => /\.(png|jpe?g|webp|gif)$/i.test(getDocumentFileName(value));
 
 const UserManagement = () => {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,12 +42,18 @@ const UserManagement = () => {
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [deleting, setDeleting] = useState(null);
-  const [updating, setUpdating] = useState(null);
 
   // Fetch users on mount
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (token) {
+      fetchUsers();
+      return;
+    }
+
+    setUsers([]);
+    setFilteredUsers([]);
+    setLoading(false);
+  }, [token]);
 
   // Filter users when search or filters change
   useEffect(() => {
@@ -28,9 +63,9 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const result = await apiJson('/v1/users/', { token });
+      const result = await apiJson('/users/', { token });
       if (result.ok && result.data) {
-        setUsers(result.data);
+        setUsers(Array.isArray(result.data) ? result.data : []);
       }
     } catch (error) {
       console.error('Failed to fetch users:', error);
@@ -47,15 +82,15 @@ const UserManagement = () => {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (user) =>
-          user.fullname.toLowerCase().includes(query) ||
-          user.email.toLowerCase().includes(query)
+          (user.fullname || '').toLowerCase().includes(query) ||
+          (user.email || '').toLowerCase().includes(query)
       );
     }
 
     // Role filter
     if (roleFilter !== 'all') {
       filtered = filtered.filter((user) => {
-        const userRole = user.role.toLowerCase();
+        const userRole = (user.role || '').toLowerCase();
         return userRole === roleFilter.toLowerCase();
       });
     }
@@ -70,59 +105,19 @@ const UserManagement = () => {
     setFilteredUsers(filtered);
   };
 
-  const handleUpdateRole = async (userId, newRole) => {
-    setUpdating(userId);
-    try {
-      const result = await apiJson(`/v1/users/${userId}`, {
-        method: 'PATCH',
-        body: { role: newRole },
-        token,
-      });
-      if (result.ok) {
-        setUsers((prev) =>
-          prev.map((user) => (user.id === userId ? { ...user, role: newRole } : user))
-        );
-      }
-    } catch (error) {
-      console.error('Failed to update role:', error);
-    } finally {
-      setUpdating(null);
-    }
-  };
-
-  const handleUpdateStatus = async (userId, newStatus) => {
-    setUpdating(userId);
-    try {
-      const result = await apiJson(`/v1/users/${userId}`, {
-        method: 'PATCH',
-        body: { is_active: newStatus },
-        token,
-      });
-      if (result.ok) {
-        setUsers((prev) =>
-          prev.map((user) =>
-            user.id === userId ? { ...user, is_active: newStatus } : user
-          )
-        );
-      }
-    } catch (error) {
-      console.error('Failed to update status:', error);
-    } finally {
-      setUpdating(null);
-    }
-  };
-
   const handleDeleteUser = async (userId) => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
 
     setDeleting(userId);
     try {
-      const result = await apiJson(`/v1/users/${userId}`, {
+      const result = await apiJson(`/users/${userId}`, {
         method: 'DELETE',
         token,
       });
       if (result.ok) {
         setUsers((prev) => prev.filter((user) => user.id !== userId));
+      } else {
+        console.error('Failed to delete user:', result.data);
       }
     } catch (error) {
       console.error('Failed to delete user:', error);
@@ -134,7 +129,7 @@ const UserManagement = () => {
   // Calculate stats
   const totalUsers = users.length;
   const activeUsers = users.filter((u) => u.is_active).length;
-  const adminCount = users.filter((u) => u.role.toLowerCase() === 'admin').length;
+  const adminCount = users.filter((u) => (u.role || '').toLowerCase() === 'admin').length;
   const suspendedCount = users.filter((u) => !u.is_active).length;
 
   const stats = [
@@ -241,100 +236,117 @@ const UserManagement = () => {
           </div>
         </div>
 
-        {/* Users Table */}
-        <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+        {/* Users Cards */}
+        <div style={{ background: 'white', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', padding: '20px' }}>
           {loading ? (
             <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>Loading users...</div>
           ) : filteredUsers.length === 0 ? (
             <div style={{ padding: '40px', textAlign: 'center', color: '#9ca3af' }}>No users found</div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #e5e7eb', background: '#f9fafb' }}>
-                    <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#374151', fontSize: '14px' }}>User</th>
-                    <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#374151', fontSize: '14px' }}>Role</th>
-                    <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#374151', fontSize: '14px' }}>Status</th>
-                    <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#374151', fontSize: '14px' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.map((user) => (
-                    <tr key={user.id} style={{ borderBottom: '1px solid #e5e7eb', transition: 'background 0.2s' }}>
-                      <td style={{ padding: '16px' }}>
-                        <div>
-                          <p style={{ fontWeight: '600', margin: '0 0 4px', color: '#111827' }}>{user.fullname}</p>
-                          <p style={{ fontSize: '13px', color: '#9ca3af', margin: 0 }}>{user.email}</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+              {filteredUsers.map((user, index) => {
+                const isAdmin = (user.role || '').toLowerCase() === 'admin';
+                return (
+                  <motion.div
+                    key={user.id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.04 }}
+                    style={{
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '18px',
+                      padding: '18px',
+                      background: 'linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)',
+                      boxShadow: '0 8px 24px rgba(15, 23, 42, 0.04)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', marginBottom: '12px' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                          <h3 style={{ margin: 0, fontSize: '18px', color: '#111827' }}>{user.fullname}</h3>
+                          {isAdmin ? (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '999px', background: '#eef2ff', color: '#4338ca', fontSize: '12px', fontWeight: '700' }}>
+                              <ShieldCheck size={14} />
+                              Admin
+                            </span>
+                          ) : null}
                         </div>
-                      </td>
-                      <td style={{ padding: '16px' }}>
-                        <select
-                          value={user.role}
-                          onChange={(e) => handleUpdateRole(user.id, e.target.value)}
-                          disabled={updating === user.id}
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: '8px',
-                            border: '1px solid #e5e7eb',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            background: user.role.toLowerCase() === 'admin' ? '#fee2e2' : '#dcfce7',
-                            color: user.role.toLowerCase() === 'admin' ? '#dc2626' : '#16a34a',
-                          }}
-                        >
-                          <option value="admin">Admin</option>
-                          <option value="civitas">Civitas</option>
-                          <option value="umum">User</option>
-                        </select>
-                      </td>
-                      <td style={{ padding: '16px' }}>
-                        <select
-                          value={user.is_active ? 'active' : 'suspended'}
-                          onChange={(e) => handleUpdateStatus(user.id, e.target.value === 'active')}
-                          disabled={updating === user.id}
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: '8px',
-                            border: '1px solid #e5e7eb',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            background: user.is_active ? '#dcfce7' : '#fef3c7',
-                            color: user.is_active ? '#16a34a' : '#d97706',
-                          }}
-                        >
-                          <option value="active">Active</option>
-                          <option value="suspended">Suspended</option>
-                        </select>
-                      </td>
-                      <td style={{ padding: '16px' }}>
-                        <button
-                          onClick={() => handleDeleteUser(user.id)}
-                          disabled={deleting === user.id}
-                          style={{
-                            background: '#fee2e2',
-                            border: 'none',
-                            color: '#dc2626',
-                            padding: '8px 12px',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            opacity: deleting === user.id ? 0.6 : 1,
-                          }}
-                        >
-                          <Trash2 size={16} />
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        <p style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>{user.email}</p>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px', borderRadius: '999px', background: user.is_active ? '#dcfce7' : '#fef3c7', color: user.is_active ? '#166534' : '#92400e', fontSize: '12px', fontWeight: '700' }}>
+                          <CircleCheckBig size={14} />
+                          {user.is_active ? 'Active' : 'Suspended'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gap: '10px', marginBottom: '16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', padding: '10px 12px', background: '#f8fafc', borderRadius: '12px' }}>
+                        <span style={{ color: '#6b7280', fontSize: '13px' }}>Role</span>
+                        <strong style={{ color: '#111827', fontSize: '13px' }}>{user.role}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', padding: '10px 12px', background: '#f8fafc', borderRadius: '12px' }}>
+                        <span style={{ color: '#6b7280', fontSize: '13px' }}>Identity</span>
+                        <div style={{ textAlign: 'right', maxWidth: '180px' }}>
+                          {user.identity_document && isPreviewableDocument(user.identity_document) ? (
+                            <img
+                              src={getDocumentUrl(user.identity_document)}
+                              alt={`${user.fullname || 'User'} identity document`}
+                              style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '12px', border: '1px solid #e5e7eb', display: 'block', marginLeft: 'auto', marginBottom: '8px' }}
+                            />
+                          ) : null}
+                          <strong style={{ color: '#111827', fontSize: '13px' }}>{user.identity_number || getDocumentFileName(user.identity_document) || '-'}</strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button
+                        onClick={() => navigate(`/users/${user.id}`)}
+                        style={{
+                          flex: 1,
+                          background: '#0f172a',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '12px',
+                          padding: '10px 14px',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          fontWeight: '700',
+                        }}
+                      >
+                        <Eye size={16} />
+                        Open Form
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(user.id)}
+                        disabled={deleting === user.id}
+                        style={{
+                          background: '#fee2e2',
+                          border: 'none',
+                          color: '#dc2626',
+                          padding: '10px 14px',
+                          borderRadius: '12px',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          fontWeight: '700',
+                          opacity: deleting === user.id ? 0.6 : 1,
+                        }}
+                      >
+                        <Trash2 size={16} />
+                        Delete
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </div>

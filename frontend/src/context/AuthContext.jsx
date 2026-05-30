@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }) => {
         email: dbUser.email,
         name: dbUser.fullname,
         role: mappedRole,
-        nim: dbUser.email.endsWith('@apps.ipb.ac.id'),   
+        nim: dbUser.identity_number,   
         department: dbUser.role === 'admin' ? 'Direktorat Sistem Informasi' : 'Ilmu Komputer'
       };
 

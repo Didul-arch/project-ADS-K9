@@ -109,14 +109,12 @@ async def get_claim_detail(
 
 
 @router.patch("/claims/{claim_id}/review")
-# --- CHANGED: Added current_user dependency with Admin check ---
 async def review_claim(
 	claim_id: int,
 	payload: ReviewClaimRequest,
 	db: AsyncSession = Depends(get_db),
 	current_user: UserEntity = Depends(get_current_user)
 ):
-	# Role validation: block users who are not Admin
 	if current_user.role != Role.ADMIN:
 		raise HTTPException(status_code=403, detail="Hanya admin yang dapat mereview claim")
 
@@ -127,7 +125,7 @@ async def review_claim(
 		reviewed_claim = await service.review_claim(
 			claim_id=claim_id,
 			new_status=payload.status,
-			reviewer_id=current_user.id, # Securely inject admin ID from JWT
+			reviewer_id=current_user.id, 
 		)
 	except ValueError as e:
 		raise HTTPException(status_code=400, detail=str(e))

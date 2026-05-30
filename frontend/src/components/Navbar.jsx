@@ -417,12 +417,14 @@ const Navbar = ({ title }) => {
                   <>
                     <hr style={{ border: 'none', borderTop: '1px solid #E0E5F2', margin: 0 }} />
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-                        <span style={{ color: 'var(--text-secondary)' }}>{t('studentId')}</span>
-                        <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                          {user.role === 'Admin' ? 'A24090001' : (user.nim || 'G6401221034')}
-                        </span>
-                      </div>
+                      {user.nim && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                          <span style={{ color: 'var(--text-secondary)' }}>{t('studentId')}</span>
+                          <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                            {user.nim}
+                          </span>
+                        </div>
+                      )}
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
                         <span style={{ color: 'var(--text-secondary)' }}>{t('department')}</span>
                         <span style={{ fontWeight: 600, color: 'var(--text-primary)', textAlign: 'right', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
