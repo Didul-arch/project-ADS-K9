@@ -34,16 +34,44 @@ const DetailClaim = () => {
     let mounted = true;
     setLoading(true);
 
-    apiJson(`/claims/${id}`)
+    // Prepare auth token if available
+    const authOpts = token ? { token } : {};
+
+    apiJson(`/claims/${id}`, authOpts)
       .then((res) => {
         if (!mounted) return;
+
+        // If 401 Unauthorized, redirect to login
+        if (res.status === 401) {
+          navigate("/login");
+          return;
+        }
+
         if (res.ok && res.data) {
+          // Backend returns { data: claim }, where claim is a ClaimEntity
           const payload = res.data && res.data.data ? res.data.data : res.data;
+
+          // Handle enum values if needed
+          if (payload) {
+            // Ensure status is lowercase string
+            if (payload.status && typeof payload.status === "object") {
+              payload.status = payload.status.value || payload.status;
+            }
+            // Ensure request_type is lowercase string
+            if (
+              payload.request_type &&
+              typeof payload.request_type === "object"
+            ) {
+              payload.request_type =
+                payload.request_type.value || payload.request_type;
+            }
+          }
+
           setClaim(payload);
 
           // Fetch item details
           if (payload && payload.item_id) {
-            apiJson(`/items/${payload.item_id}`)
+            apiJson(`/items/${payload.item_id}`, authOpts)
               .then((itemRes) => {
                 if (!mounted) return;
                 if (itemRes.ok && itemRes.data) {
@@ -59,7 +87,7 @@ const DetailClaim = () => {
 
           // Fetch claimer info
           if (payload && payload.claimer_id) {
-            apiJson(`/users/${payload.claimer_id}`)
+            apiJson(`/users/${payload.claimer_id}`, authOpts)
               .then((userRes) => {
                 if (!mounted) return;
                 if (userRes.ok && userRes.data) {
@@ -87,7 +115,7 @@ const DetailClaim = () => {
     return () => {
       mounted = false;
     };
-  }, [id]);
+  }, [id, token, navigate]);
 
   if (loading) return <div>{t("loading") || "Loading..."}</div>;
   if (!claim) return <div>{t("claimNotFound") || "Claim not found"}</div>;
