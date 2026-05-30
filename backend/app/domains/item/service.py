@@ -10,14 +10,14 @@ class ItemService:
         if len(item.title) < 5:
             raise ValueError("Judul laporan minimal 5 karakter.")
 
-        item.status = ItemStatus.LOST
+        item.status = ItemStatus.NOT_RETURNED
         return await self.item_repo.save(item)
 
     async def report_found_item(self, item: ItemEntity) -> ItemEntity:
-        if len(item.title) < 5:
+        if len(item.title) < 2:
             raise ValueError("Judul laporan minimal 5 karakter.")
 
-        item.status = ItemStatus.FOUND
+        item.status = ItemStatus.NOT_RETURNED
         return await self.item_repo.save(item)
 
     async def get_all_items(self):

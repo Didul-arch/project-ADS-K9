@@ -22,6 +22,7 @@ def build_user_response(user: UserEntity) -> UserResponse:
         id=user.id,
         email=user.email,
         fullname=user.fullname,
+        phone_number=user.phone_number,
         is_active=user.is_active,
         role=user.role.value if hasattr(user.role, 'value') else str(user.role),
         identity_number=getattr(user, 'identity_number', None),
@@ -70,6 +71,7 @@ async def list_users(
 @router.patch("/users/me", response_model=UserResponse)
 async def update_current_user(
     fullname: str | None = Form(None),
+    phone_number: str | None = Form(None),
     identity_number: str | None = Form(None),
     identity_document: str | None = Form(None),
     identity_document_file: UploadFile | None = File(None),
@@ -84,6 +86,7 @@ async def update_current_user(
         updated_user = await service.update_own_profile(
             current_user=current_user,
             fullname=fullname,
+            phone_number=phone_number,
             identity_number=identity_number,
             identity_document=save_identity_document(identity_document_file) if identity_document_file else identity_document,
         )
@@ -115,6 +118,7 @@ async def get_user_detail(user_id: int, db: AsyncSession = Depends(get_db)):
 async def update_user(
     user_id: int,
     fullname: str | None = Form(None),
+    phone_number: str | None = Form(None),
     role: Role | None = Form(None),
     is_active: bool | None = Form(None),
     identity_number: str | None = Form(None),
@@ -129,6 +133,7 @@ async def update_user(
         updated_user = await service.update_user_profile(
             user_id=user_id,
             fullname=fullname,
+            phone_number=phone_number,
             role=role,
             is_active=is_active,
             identity_number=identity_number,

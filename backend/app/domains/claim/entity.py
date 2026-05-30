@@ -6,10 +6,16 @@ class ClaimStatus(str, Enum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
+
+
+class RequestType(str, Enum):
+    CLAIM = "claim"
+    FOUND = "found"
    
 @dataclass
 class ClaimEntity:
     id: int | None
+    request_type: RequestType
     proof_text: str
     proof_image: str | None
     status: ClaimStatus

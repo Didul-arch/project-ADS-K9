@@ -12,6 +12,7 @@ class UserRepository:
         return UserEntity(
             id=db_user.id,
             email=db_user.email,
+            phone_number=db_user.phone_number,
             identity_number=db_user.identity_number,
             identity_document=db_user.identity_document,
             fullname=db_user.full_name,
@@ -52,6 +53,7 @@ class UserRepository:
         fullname: str | None = None,
         role: Role | None = None,
         is_active: bool | None = None,
+        phone_number: str | None = None,
         identity_number: str | None = None,
         identity_document: str | None = None,
     ) -> UserEntity | None:
@@ -66,6 +68,8 @@ class UserRepository:
             db_user.role = role
         if is_active is not None:
             db_user.is_active = is_active
+        if phone_number is not None:
+            db_user.phone_number = phone_number
         if identity_number is not None:
             db_user.identity_number = identity_number
         if identity_document is not None:
@@ -97,6 +101,7 @@ class UserRepository:
         new_user = UserModel(
             email=user.email,
             full_name=user.fullname,
+            phone_number=user.phone_number,
             identity_number=user.identity_number,
             identity_document=user.identity_document,
             is_active=user.is_active,

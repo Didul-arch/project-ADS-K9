@@ -20,7 +20,7 @@ class ItemModel(Base):
         Enum(ReportType), default=ReportType.LOST, nullable=False
     )
     status: Mapped[ItemStatus] = mapped_column(
-        Enum(ItemStatus), default=ItemStatus.LOST
+        Enum(ItemStatus), default=ItemStatus.NOT_RETURNED, nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
     

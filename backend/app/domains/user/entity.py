@@ -10,6 +10,7 @@ class Role(str, Enum):
 class UserEntity:
     email: str
     fullname: str
+    phone_number: str
     identity_number: str | None
     identity_document: str | None
     password_hashed: str

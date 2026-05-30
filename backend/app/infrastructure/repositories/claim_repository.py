@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.domains.claim.entity import ClaimEntity, ClaimStatus
+from app.domains.claim.entity import ClaimEntity, ClaimStatus, RequestType
 from sqlalchemy import select
 from datetime import date, datetime, time, timedelta
 from app.infrastructure.db.models.claim_model import ClaimModel
@@ -11,6 +11,7 @@ class ClaimRepository:
     def _to_entity(self, claim: ClaimModel) -> ClaimEntity:
         return ClaimEntity(
             id=claim.id,
+            request_type=claim.request_type,
             proof_text=claim.proof_text,
             proof_image=claim.proof_image,
             status=claim.status,
@@ -25,6 +26,7 @@ class ClaimRepository:
     # 1. Save new claim
     async def save(self, claim: ClaimEntity) -> ClaimEntity:
         db_claim = ClaimModel(
+            request_type=claim.request_type,
             proof_text=claim.proof_text,
             proof_image=claim.proof_image,
             status=claim.status,

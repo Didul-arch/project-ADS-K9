@@ -13,6 +13,7 @@ from app.domains.item.entity import ItemEntity, ItemStatus, ReportType
 from app.domains.item.service import ItemService
 from app.infrastructure.config.settings import settings
 from app.infrastructure.db.session import get_db
+from app.infrastructure.repositories.activity_history_repository import ActivityHistoryRepository
 from app.infrastructure.repositories.item_repository import ItemRepository
 
 router = APIRouter()
@@ -73,8 +74,10 @@ async def report_lost_item(
 	try:
 		image_path = save_item_image(image) if image else None
 		result = await service.report_lost_item(
-			build_item(title, description, location, category, image_path, ItemStatus.LOST, ReportType.LOST, reporter_id)
+			build_item(title, description, location, category, image_path, ItemStatus.NOT_RETURNED, ReportType.LOST, reporter_id)
 		)
+		history_repo = ActivityHistoryRepository(db)
+		await history_repo.create_report_entry(reporter_id, result)
 		return {"status": "success", "data": result}
 	except ValueError as e:
 		raise HTTPException(status_code=400, detail=str(e))
@@ -98,8 +101,10 @@ async def report_found_item(
 	try:
 		image_path = save_item_image(image) if image else None
 		result = await service.report_found_item(
-			build_item(title, description, location, category, image_path, ItemStatus.FOUND, ReportType.FOUND, reporter_id)
+			build_item(title, description, location, category, image_path, ItemStatus.NOT_RETURNED, ReportType.FOUND, reporter_id)
 		)
+		history_repo = ActivityHistoryRepository(db)
+		await history_repo.create_report_entry(reporter_id, result)
 		return {"status": "success", "data": result}
 	except ValueError as e:
 		raise HTTPException(status_code=400, detail=str(e))
