@@ -8,6 +8,12 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Buat direktori storage
+RUN mkdir -p storage
+
+# (Opsional) Pastikan hak aksesnya bisa ditulis 
+RUN chmod 777 storage
+
 # 4. Copy your application code
 COPY ./app ./app
 # Copy Alembic config and migrations so we can run migrations inside the container
