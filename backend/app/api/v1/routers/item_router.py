@@ -61,7 +61,7 @@ async def report_lost_item(
 	description: str = Form(...),
 	location: str = Form(...),
 	category: str | None = Form(None),
-	image: UploadFile = File(...),
+	image: UploadFile | None = File(None),
 	db: AsyncSession = Depends(get_db),
 	current_user: UserEntity = Depends(get_current_user)
 ):
@@ -71,7 +71,7 @@ async def report_lost_item(
 	reporter_id = current_user.id
 
 	try:
-		image_path = save_item_image(image)
+		image_path = save_item_image(image) if image else None
 		result = await service.report_lost_item(
 			build_item(title, description, location, category, image_path, ItemStatus.LOST, ReportType.LOST, reporter_id)
 		)
@@ -86,7 +86,7 @@ async def report_found_item(
 	description: str = Form(...),
 	location: str = Form(...),
 	category: str | None = Form(None),
-	image: UploadFile = File(...),
+	image: UploadFile | None = File(None),
 	db: AsyncSession = Depends(get_db),
 	current_user: UserEntity = Depends(get_current_user)
 ):
@@ -96,7 +96,7 @@ async def report_found_item(
 	reporter_id = current_user.id
 
 	try:
-		image_path = save_item_image(image)
+		image_path = save_item_image(image) if image else None
 		result = await service.report_found_item(
 			build_item(title, description, location, category, image_path, ItemStatus.FOUND, ReportType.FOUND, reporter_id)
 		)
