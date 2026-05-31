@@ -1,6 +1,3 @@
-from pathlib import Path
-from uuid import uuid4
-
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,6 +7,7 @@ from app.domains.user.entity import UserEntity, Role
 from app.domains.user.service import UserService
 from app.infrastructure.db.session import get_db
 from app.infrastructure.repositories.user_repository import UserRepository
+from app.infrastructure.storage.file_storage import save_upload_file
 
 router = APIRouter()
 
@@ -46,15 +44,7 @@ def require_admin(current_user: UserEntity) -> None:
 
 
 def save_identity_document(upload_file: UploadFile) -> str:
-    storage_dir = Path("storage/identity-documents")
-    storage_dir.mkdir(parents=True, exist_ok=True)
-
-    extension = Path(upload_file.filename or "document").suffix or ".pdf"
-    file_name = f"{uuid4().hex}{extension}"
-    file_path = storage_dir / file_name
-    file_path.write_bytes(upload_file.file.read())
-
-    return f"/storage/identity-documents/{file_name}"
+    return save_upload_file(upload_file, subdir="identity-documents", default_extension=".pdf")
 
 
 @router.get("/users/", response_model=list[UserResponse])

@@ -1,6 +1,4 @@
 from datetime import date, datetime
-from pathlib import Path
-from uuid import uuid4
 
 from sqlalchemy import select
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
@@ -14,9 +12,9 @@ from app.infrastructure.db.session import get_db
 from app.infrastructure.repositories.activity_history_repository import ActivityHistoryRepository
 from app.infrastructure.repositories.claim_repository import ClaimRepository
 from app.infrastructure.repositories.item_repository import ItemRepository
-from app.infrastructure.config.settings import settings
 from app.infrastructure.db.models.claim_model import ClaimModel
 from app.infrastructure.db.models.item_model import ItemModel
+from app.infrastructure.storage.file_storage import save_upload_file
 
 from app.api.v1.routers.auth_router import get_current_user  # Adjust path if your folder layout is different
 from app.domains.user.entity import UserEntity, Role
@@ -26,14 +24,7 @@ from app.infrastructure.repositories.notification_repository import Notification
 router = APIRouter()
 
 def save_claim_proof_image(upload_file: UploadFile) -> str:
-	storage_dir = Path(settings.CLAIM_UPLOAD_DIR)
-	storage_dir.mkdir(parents=True, exist_ok=True)
-	extension = Path(upload_file.filename or "proof").suffix or ".jpg"
-	file_name = f"{uuid4().hex}{extension}"
-	file_path = storage_dir / file_name
-	content = upload_file.file.read()
-	file_path.write_bytes(content)
-	return f"/storage/claims/{file_name}"
+	return save_upload_file(upload_file, subdir="claims", default_extension=".jpg")
 
 
 # Updated helper to accept the authenticating user's ID

@@ -1,7 +1,5 @@
 from datetime import datetime
 from datetime import date
-from pathlib import Path
-from uuid import uuid4
 
 from app.api.v1.routers.auth_router import get_current_user
 from app.domains.user.entity import UserEntity
@@ -11,23 +9,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.schemas.item_schema import ItemResponse
 from app.domains.item.entity import ItemEntity, ItemStatus, ReportType
 from app.domains.item.service import ItemService
-from app.infrastructure.config.settings import settings
 from app.infrastructure.db.session import get_db
 from app.infrastructure.repositories.activity_history_repository import ActivityHistoryRepository
 from app.infrastructure.repositories.item_repository import ItemRepository
+from app.infrastructure.storage.file_storage import save_upload_file
 
 router = APIRouter()
 
 
 def save_item_image(upload_file: UploadFile) -> str:
-	storage_dir = Path(settings.CLAIM_UPLOAD_DIR).parent / "items"
-	storage_dir.mkdir(parents=True, exist_ok=True)
-	extension = Path(upload_file.filename or "item").suffix or ".jpg"
-	file_name = f"{uuid4().hex}{extension}"
-	file_path = storage_dir / file_name
-	content = upload_file.file.read()
-	file_path.write_bytes(content)
-	return f"/storage/items/{file_name}"
+	return save_upload_file(upload_file, subdir="items", default_extension=".jpg")
 
 
 def build_item(
