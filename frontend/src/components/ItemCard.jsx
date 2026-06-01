@@ -1,11 +1,13 @@
 import React from "react";
 import { MapPin, Calendar, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
-import { resolveAssetUrl } from "../lib/assetUrl";
+import { getAssetFileName, isPreviewableImage, resolveAssetUrl } from "../lib/assetUrl";
 
 const ItemCard = ({ item }) => {
   if (!item) return null;
   const imageUrl = resolveAssetUrl(item.image);
+  const imageName = getAssetFileName(item.image);
+  const canPreviewImage = isPreviewableImage(item.image);
 
   const getStatusLabel = (status) => {
     if (!status) return "Unknown";
@@ -48,11 +50,37 @@ const ItemCard = ({ item }) => {
         <div
           style={{ position: "relative", height: "180px", overflow: "hidden" }}
         >
-          <img
-            src={imageUrl}
-            alt={item.title || "Item"}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
+          {canPreviewImage ? (
+            <img
+              src={imageUrl}
+              alt={item.title || "Item"}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
+            <a
+              href={imageUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "column",
+                gap: "6px",
+                textDecoration: "none",
+                background: "#F8FAFC",
+                color: "var(--text-primary)",
+                padding: "16px",
+              }}
+            >
+              <span style={{ fontWeight: 700, fontSize: "13px" }}>Preview unavailable</span>
+              <span style={{ fontSize: "12px", color: "var(--text-secondary)", textAlign: "center" }}>
+                {imageName || "Open file"}
+              </span>
+            </a>
+          )}
           <div style={{ position: "absolute", top: "12px", left: "12px" }}>
             <span className={`badge ${getStatusClass(item.status)}`}>
               {getStatusLabel(item.status)}

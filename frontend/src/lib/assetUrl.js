@@ -33,3 +33,20 @@ export function resolveAssetUrl(assetPath) {
 
   return `${baseUrl}/${normalizedAssetPath}`;
 }
+
+export function getAssetFileName(assetPath) {
+  if (!assetPath) return "";
+
+  return assetPath
+    .split("?")[0]
+    .split("#")[0]
+    .replace(/\\/g, "/")
+    .split("/")
+    .filter(Boolean)
+    .pop() || "";
+}
+
+export function isPreviewableImage(assetPath) {
+  const fileName = getAssetFileName(assetPath).toLowerCase();
+  return /\.(png|jpe?g|webp|gif|avif|bmp)$/i.test(fileName);
+}
