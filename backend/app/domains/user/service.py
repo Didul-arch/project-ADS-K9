@@ -24,8 +24,7 @@ class UserService:
         if existing_user:
             raise DuplicateUserError("Email sudah terdaftar.")
 
-        email_lower = user.email.strip().lower()
-        if user.is_ipb_student(email_lower):
+        if user.is_ipb_student():
             user.role = Role.CIVITAS
         else:
             user.role = Role.UMUM
