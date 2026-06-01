@@ -26,3 +26,9 @@ class AdminModel(UserModel):
     __mapper_args__ = {
         "polymorphic_identity": Role.ADMIN,
     }
+
+
+class CivitasModel(UserModel):
+    __mapper_args__ = {
+        "polymorphic_identity": Role.CIVITAS,
+    }
