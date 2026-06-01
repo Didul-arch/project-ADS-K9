@@ -44,7 +44,6 @@ const ItemCard = ({ item }) => {
         return "badge-lost";
       case "found":
         return "badge-found";
-      case "not-returned":
       case "not returned":
         return "badge-not-returned";
       case "returned":
@@ -101,8 +100,8 @@ const ItemCard = ({ item }) => {
             </a>
           )}
           <div style={{ position: "absolute", top: "12px", left: "12px" }}>
-            <span className={`badge ${getStatusClass(item.status)}`}>
-              {getStatusLabel(item.status)}
+            <span className={`badge ${getStatusClass(item.report_type)}`}>
+              {getStatusLabel(item.report_type)}
             </span>
           </div>
         </div>
