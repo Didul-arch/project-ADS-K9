@@ -2,12 +2,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 
-
 class NotificationType(str, Enum):
     CLAIM_SUBMITTED = "claim_submitted"
     CLAIM_APPROVED = "claim_approved"
     CLAIM_REJECTED = "claim_rejected"
-
 
 @dataclass
 class NotificationEntity:
@@ -21,3 +19,9 @@ class NotificationEntity:
     read_at: datetime | None = None
     related_item_id: int | None = None
     related_claim_id: int | None = None
+
+    def mark_as_read(self):
+        if self.is_read:
+            return  # sudah dibaca, tidak perlu error
+        self.is_read = True
+        self.read_at = datetime.now()

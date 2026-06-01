@@ -37,13 +37,15 @@ export function resolveAssetUrl(assetPath) {
 export function getAssetFileName(assetPath) {
   if (!assetPath) return "";
 
-  return assetPath
-    .split("?")[0]
-    .split("#")[0]
-    .replace(/\\/g, "/")
-    .split("/")
-    .filter(Boolean)
-    .pop() || "";
+  return (
+    assetPath
+      .split("?")[0]
+      .split("#")[0]
+      .replace(/\\/g, "/")
+      .split("/")
+      .filter(Boolean)
+      .pop() || ""
+  );
 }
 
 export function isPreviewableImage(assetPath) {

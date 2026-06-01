@@ -96,3 +96,14 @@ class NotificationRepository:
 
         await self.db.commit()
         return len(notifications)
+
+    async def get_by_id(self, notification_id: int, user_id: int) -> NotificationEntity | None:
+        result = await self.db.execute(
+            select(NotificationModel)
+            .where(NotificationModel.id == notification_id)
+            .where(NotificationModel.user_id == user_id)
+        )
+        notification = result.scalars().first()
+        if not notification:
+            return None
+        return self._to_entity(notification)

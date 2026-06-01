@@ -23,3 +23,20 @@ class UserEntity:
 
     def can_report_item(self) -> bool:
         return self.is_active
+
+    def can_submit_claim(self) -> bool:
+        return self.is_active
+
+    def can_mark_item_returned(self) -> bool:
+        return self.is_active
+
+
+@dataclass
+class AdminEntity(UserEntity):
+    role: Role = Role.ADMIN
+
+    def can_review_claim(self) -> bool:
+        return self.is_active and self.role == Role.ADMIN
+
+    def can_manage_users(self) -> bool:
+        return self.is_active and self.role == Role.ADMIN
