@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { apiJson } from "../lib/api";
+import { resolveAssetUrl } from "../lib/assetUrl";
 
 const ItemsContext = createContext();
 
@@ -8,15 +9,6 @@ export const useItems = () => useContext(ItemsContext);
 export const ItemsProvider = ({ children }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const baseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
-
-  const resolveAssetUrl = (assetPath) => {
-    if (!assetPath) return "";
-    if (assetPath.startsWith("http://") || assetPath.startsWith("https://"))
-      return assetPath;
-    if (assetPath.startsWith("/")) return `${baseUrl}${assetPath}`;
-    return `${baseUrl}/${assetPath}`;
-  };
 
   const fetchItems = async () => {
     try {
@@ -40,7 +32,6 @@ export const ItemsProvider = ({ children }) => {
         reporterEmail: `user${item.reporter_id}@apps.ipb.ac.id`,
         contactInfo: "WA: 08123456789",
       }));
-
       // Sort so newest items (highest ID) come first
       mappedItems.sort((a, b) => b.id - a.id);
       setItems(mappedItems);

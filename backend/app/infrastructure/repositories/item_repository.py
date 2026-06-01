@@ -3,6 +3,7 @@ from app.infrastructure.db.models.item_model import ItemModel
 from app.domains.item.entity import ItemEntity, ReportType
 from sqlalchemy import select
 from datetime import date, datetime, time, timedelta
+from app.infrastructure.storage.file_storage import get_accessible_file_url
 
 class ItemRepository:
     def __init__(self, db: AsyncSession):
@@ -14,7 +15,7 @@ class ItemRepository:
             title=item.title,
             description=item.description,
             location=item.location,
-            image=item.image,
+            image=get_accessible_file_url(item.image),
             category=item.category,
             latitude=item.latitude,
             longitude=item.longitude,
@@ -42,9 +43,8 @@ class ItemRepository:
         self.db.add(db_item)
         await self.db.commit()
         await self.db.refresh(db_item)
-        
-        item.id = db_item.id
-        return item
+
+        return self._to_entity(db_item)
 
     # 2. Cari Semua Barang 
     async def get_all(self, limit: int = 20) -> list[ItemEntity]:

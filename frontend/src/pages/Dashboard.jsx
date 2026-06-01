@@ -17,6 +17,7 @@ import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useItems } from "../context/ItemsContext";
 import { apiJson } from "../lib/api";
+import { resolveAssetUrl } from "../lib/assetUrl";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -105,12 +106,7 @@ const Dashboard = () => {
   };
 
   const getClaimImageUrl = (proofImage) => {
-    if (!proofImage) return "";
-    const baseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(
-      /\/$/,
-      "",
-    );
-    return `${baseUrl}${proofImage}`;
+    return resolveAssetUrl(proofImage);
   };
 
   return (

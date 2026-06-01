@@ -1,14 +1,11 @@
 import React from "react";
 import { MapPin, Calendar, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
+import { resolveAssetUrl } from "../lib/assetUrl";
 
 const ItemCard = ({ item }) => {
   if (!item) return null;
-  const baseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
-  const imageUrl =
-    item.image && item.image.startsWith("/")
-      ? `${baseUrl}${item.image}`
-      : item.image;
+  const imageUrl = resolveAssetUrl(item.image);
 
   const getStatusClass = (status) => {
     if (!status) return "";
