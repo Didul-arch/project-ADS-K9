@@ -15,6 +15,7 @@ from app.infrastructure.repositories.item_repository import ItemRepository
 from app.infrastructure.db.models.claim_model import ClaimModel
 from app.infrastructure.db.models.item_model import ItemModel
 from app.infrastructure.storage.file_storage import save_upload_file
+from app.infrastructure.storage.file_storage import get_accessible_file_url
 
 from app.api.v1.routers.auth_router import get_current_user  # Adjust path if your folder layout is different
 from app.domains.user.entity import UserEntity, Role
@@ -61,7 +62,7 @@ def build_history_item_entry(item: ItemModel) -> dict:
 		"description": item.description,
 		"location": item.location,
 		"category": item.category,
-		"image": item.image,
+		"image": get_accessible_file_url(item.image),
 		"created_at": item.created_at.isoformat() if item.created_at else None,
 		"item_status": item.status.value if hasattr(item.status, "value") else str(item.status),
 		"request_status": None,
@@ -82,7 +83,7 @@ def build_history_request_entry(claim: ClaimModel, item: ItemModel) -> dict:
 		"description": item.description,
 		"location": item.location,
 		"category": item.category,
-		"image": item.image,
+		"image": get_accessible_file_url(item.image),
 		"created_at": claim.created_at.isoformat() if claim.created_at else None,
 		"item_status": item_status,
 		"request_status": request_status,

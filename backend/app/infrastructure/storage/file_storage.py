@@ -8,6 +8,20 @@ from botocore.config import Config
 from app.infrastructure.config.settings import settings
 
 
+def _build_s3_client():
+	import boto3
+
+	addressing_style = "path" if settings.S3_FORCE_PATH_STYLE else "virtual"
+	return boto3.client(
+		"s3",
+		region_name=settings.S3_REGION,
+		endpoint_url=settings.S3_ENDPOINT_URL,
+		aws_access_key_id=settings.S3_ACCESS_KEY_ID,
+		aws_secret_access_key=settings.S3_SECRET_ACCESS_KEY,
+		config=Config(s3={"addressing_style": addressing_style}),
+	)
+
+
 def _build_file_name(upload_file: UploadFile, default_extension: str) -> str:
 	extension = Path(upload_file.filename or "file").suffix or default_extension
 	return f"{uuid4().hex}{extension}"
@@ -24,17 +38,7 @@ def _save_to_s3(upload_file: UploadFile, object_key: str) -> str:
 	if not settings.S3_BUCKET_NAME:
 		raise HTTPException(status_code=500, detail="S3_BUCKET_NAME belum diset")
 
-	import boto3
-
-	addressing_style = "path" if settings.S3_FORCE_PATH_STYLE else "virtual"
-	client = boto3.client(
-		"s3",
-		region_name=settings.S3_REGION,
-		endpoint_url=settings.S3_ENDPOINT_URL,
-		aws_access_key_id=settings.S3_ACCESS_KEY_ID,
-		aws_secret_access_key=settings.S3_SECRET_ACCESS_KEY,
-		config=Config(s3={"addressing_style": addressing_style}),
-	)
+	client = _build_s3_client()
 	upload_file.file.seek(0)
 	client.upload_fileobj(
 		upload_file.file,
@@ -45,6 +49,42 @@ def _save_to_s3(upload_file: UploadFile, object_key: str) -> str:
 		},
 	)
 	return _build_public_url(object_key)
+
+
+def _extract_s3_object_key(stored_path: str) -> str:
+	if stored_path.startswith("http://") or stored_path.startswith("https://"):
+		parsed = urlparse(stored_path)
+		path = parsed.path.lstrip("/")
+		if settings.S3_BUCKET_NAME and path.startswith(f"{settings.S3_BUCKET_NAME}/"):
+			return path[len(settings.S3_BUCKET_NAME) + 1 :]
+		return path
+
+	return stored_path.lstrip("/")
+
+
+def get_accessible_file_url(stored_path: str | None) -> str | None:
+	if not stored_path:
+		return None
+
+	if settings.STORAGE_PROVIDER.lower() != "s3":
+		return stored_path
+
+	if stored_path.startswith("/storage/") or stored_path.startswith("storage/"):
+		return stored_path
+
+	if not settings.S3_BUCKET_NAME:
+		return stored_path
+
+	object_key = _extract_s3_object_key(stored_path)
+	client = _build_s3_client()
+	try:
+		return client.generate_presigned_url(
+			"get_object",
+			Params={"Bucket": settings.S3_BUCKET_NAME, "Key": object_key},
+			ExpiresIn=60 * 60,
+		)
+	except Exception:
+		return stored_path
 
 
 def _build_public_url(object_key: str) -> str:

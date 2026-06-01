@@ -6,6 +6,7 @@ import Navbar from "../components/Navbar";
 import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 import { apiJson } from "../lib/api";
+import { resolveAssetUrl } from "../lib/assetUrl";
 
 const Claim = () => {
   const { id } = useParams();
@@ -54,11 +55,7 @@ const Claim = () => {
     }
   }, [user, loading, navigate]);
 
-  const baseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
-  const itemImage =
-    item?.image && item.image.startsWith("/")
-      ? `${baseUrl}${item.image}`
-      : item?.image;
+  const itemImage = resolveAssetUrl(item?.image);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

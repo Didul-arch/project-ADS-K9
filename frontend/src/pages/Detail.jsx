@@ -15,6 +15,7 @@ import {
 import { motion } from "framer-motion";
 import { useLanguage } from "../context/LanguageContext";
 import { apiJson } from "../lib/api";
+import { resolveAssetUrl } from "../lib/assetUrl";
 
 const Detail = () => {
   const { id } = useParams();
@@ -64,11 +65,7 @@ const Detail = () => {
 
   if (loadingItem) return <div>Loading...</div>;
   if (!item) return <div>Item not found</div>;
-  const baseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
-  const itemImage =
-    item.image && item.image.startsWith("/")
-      ? `${baseUrl}${item.image}`
-      : item.image;
+  const itemImage = resolveAssetUrl(item.image);
   const displayDate = item?.created_at
     ? new Date(item.created_at).toLocaleString()
     : item?.date || "-";
@@ -85,7 +82,6 @@ const Detail = () => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
   const getContactLink = (info) => {
     if (!info) return "#";
     const lower = info.toLowerCase();
