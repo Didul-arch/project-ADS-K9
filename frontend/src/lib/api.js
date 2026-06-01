@@ -27,6 +27,11 @@ export async function api(path, { method = 'GET', body = null, token = null, hea
 
 export async function apiJson(path, opts = {}) {
   const res = await api(path, opts);
+  
+  if (res.status === 401) {
+    window.dispatchEvent(new Event('auth-unauthorized'));
+  }
+
   const text = await res.text();
   try {
     const json = text ? JSON.parse(text) : null;
