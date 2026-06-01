@@ -75,6 +75,8 @@ Kalau upload error karena addressing style, ubah jadi `true`.
 
 Kalau env di atas belum diset, backend tetap memakai folder lokal `storage/` seperti sebelumnya.
 
+Folder local yang dipakai saat development: `storage/items`, `storage/claims`, dan `storage/identity-documents` untuk identity document user.
+
 ## Konfigurasi CORS di Railway
 
 Kalau frontend kamu sudah deploy, tambahkan origin frontend ke env backend:
