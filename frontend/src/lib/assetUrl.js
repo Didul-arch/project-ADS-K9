@@ -1,28 +1,30 @@
 export function resolveAssetUrl(assetPath) {
   if (!assetPath) return "";
 
+  const normalizedAssetPath = assetPath.trim().replace(/^(https?)\/\//i, "$1://");
+
   if (
-    assetPath.startsWith("http://") ||
-    assetPath.startsWith("https://") ||
-    assetPath.startsWith("data:") ||
-    assetPath.startsWith("blob:")
+    normalizedAssetPath.startsWith("http://") ||
+    normalizedAssetPath.startsWith("https://") ||
+    normalizedAssetPath.startsWith("data:") ||
+    normalizedAssetPath.startsWith("blob:")
   ) {
-    return assetPath;
+    return normalizedAssetPath;
   }
 
   const apiBase = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
   const storageBase = (import.meta.env.VITE_STORAGE_BASE_URL || "").replace(/\/$/, "");
 
-  if (assetPath.startsWith("/storage/")) {
-    return apiBase ? `${apiBase}${assetPath}` : assetPath;
+  if (normalizedAssetPath.startsWith("/storage/")) {
+    return apiBase ? `${apiBase}${normalizedAssetPath}` : normalizedAssetPath;
   }
 
   const baseUrl = storageBase || apiBase;
   if (!baseUrl) return assetPath;
 
-  if (assetPath.startsWith("/")) {
-    return `${baseUrl}${assetPath}`;
+  if (normalizedAssetPath.startsWith("/")) {
+    return `${baseUrl}${normalizedAssetPath}`;
   }
 
-  return `${baseUrl}/${assetPath}`;
+  return `${baseUrl}/${normalizedAssetPath}`;
 }

@@ -7,6 +7,15 @@ const ItemCard = ({ item }) => {
   if (!item) return null;
   const imageUrl = resolveAssetUrl(item.image);
 
+  const getStatusLabel = (status) => {
+    if (!status) return "Unknown";
+    const normalized = status.toLowerCase();
+    if (normalized === "not-returned" || normalized === "not returned") {
+      return "Not Returned";
+    }
+    return status;
+  };
+
   const getStatusClass = (status) => {
     if (!status) return "";
     switch (status.toLowerCase()) {
@@ -14,6 +23,9 @@ const ItemCard = ({ item }) => {
         return "badge-lost";
       case "found":
         return "badge-found";
+      case "not-returned":
+      case "not returned":
+        return "badge-not-returned";
       case "returned":
         return "badge-returned";
       default:
@@ -43,7 +55,7 @@ const ItemCard = ({ item }) => {
           />
           <div style={{ position: "absolute", top: "12px", left: "12px" }}>
             <span className={`badge ${getStatusClass(item.status)}`}>
-              {item.status || "Unknown"}
+              {getStatusLabel(item.status)}
             </span>
           </div>
         </div>
@@ -67,7 +79,7 @@ const ItemCard = ({ item }) => {
             }}
           >
             <span className={`badge ${getStatusClass(item.status)}`}>
-              {item.status || "Unknown"}
+              {getStatusLabel(item.status)}
             </span>
             <h3 style={{ margin: 0 }}>{item.title || "Untitled Item"}</h3>
           </div>

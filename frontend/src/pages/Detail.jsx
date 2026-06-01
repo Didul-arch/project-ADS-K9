@@ -108,6 +108,9 @@ const Detail = () => {
         return "badge-lost";
       case "found":
         return "badge-found";
+      case "not-returned":
+      case "not returned":
+        return "badge-not-returned";
       case "returned":
         return "badge-returned";
       default:
