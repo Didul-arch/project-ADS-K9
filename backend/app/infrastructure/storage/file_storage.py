@@ -1,11 +1,20 @@
+from io import BytesIO
 from pathlib import Path
 from urllib.parse import urlparse
 from uuid import uuid4
 
 from fastapi import HTTPException, UploadFile
 from botocore.config import Config
+from PIL import Image, UnidentifiedImageError
 
 from app.infrastructure.config.settings import settings
+
+try:
+	import pillow_heif
+
+	pillow_heif.register_heif_opener()
+except Exception:
+	pass
 
 
 def _build_s3_client():
@@ -27,10 +36,45 @@ def _build_file_name(upload_file: UploadFile, default_extension: str) -> str:
 	return f"{uuid4().hex}{extension}"
 
 
+def _is_webp_convertible(upload_file: UploadFile) -> bool:
+	content_type = (upload_file.content_type or "").lower()
+	extension = Path(upload_file.filename or "").suffix.lower()
+	return content_type.startswith("image/") or extension in {
+		".jpg",
+		".jpeg",
+		".png",
+		".webp",
+		".gif",
+		".bmp",
+		".tif",
+		".tiff",
+		".heic",
+		".heif",
+		".avif",
+	}
+
+
+def _convert_image_to_webp_bytes(upload_file: UploadFile) -> bytes:
+	try:
+		upload_file.file.seek(0)
+		with Image.open(upload_file.file) as image:
+			image = image.convert("RGBA") if image.mode in {"P", "LA"} else image.convert("RGB")
+			buffer = BytesIO()
+			image.save(buffer, format="WEBP", quality=85, method=6)
+			return buffer.getvalue()
+	except UnidentifiedImageError as exc:
+		raise HTTPException(status_code=400, detail="File gambar tidak valid atau formatnya tidak didukung") from exc
+	except Exception as exc:
+		raise HTTPException(status_code=500, detail="Gagal mengonversi gambar ke WebP") from exc
+
+
 def _save_locally(upload_file: UploadFile, storage_dir: Path, file_name: str, subdir: str) -> str:
 	storage_dir.mkdir(parents=True, exist_ok=True)
-	upload_file.file.seek(0)
-	(storage_dir / file_name).write_bytes(upload_file.file.read())
+	if _is_webp_convertible(upload_file):
+		(storage_dir / file_name).write_bytes(_convert_image_to_webp_bytes(upload_file))
+	else:
+		upload_file.file.seek(0)
+		(storage_dir / file_name).write_bytes(upload_file.file.read())
 	return f"/storage/{subdir}/{file_name}"
 
 
@@ -39,13 +83,16 @@ def _save_to_s3(upload_file: UploadFile, object_key: str) -> str:
 		raise HTTPException(status_code=500, detail="S3_BUCKET_NAME belum diset")
 
 	client = _build_s3_client()
-	upload_file.file.seek(0)
+	is_convertible = _is_webp_convertible(upload_file)
+	body = BytesIO(_convert_image_to_webp_bytes(upload_file)) if is_convertible else upload_file.file
+	if not is_convertible:
+		upload_file.file.seek(0)
 	client.upload_fileobj(
-		upload_file.file,
+		body,
 		settings.S3_BUCKET_NAME,
 		object_key,
 		ExtraArgs={
-			"ContentType": upload_file.content_type or "application/octet-stream",
+			"ContentType": "image/webp" if is_convertible else (upload_file.content_type or "application/octet-stream"),
 		},
 	)
 	return _build_public_url(object_key)
@@ -115,7 +162,12 @@ def _build_public_url(object_key: str) -> str:
 
 
 def save_upload_file(upload_file: UploadFile, *, subdir: str, default_extension: str = ".bin") -> str:
+	if upload_file is None:
+		raise HTTPException(status_code=400, detail="File upload tidak ditemukan")
+
 	file_name = _build_file_name(upload_file, default_extension)
+	if _is_webp_convertible(upload_file):
+		file_name = f"{Path(file_name).stem}.webp"
 	object_key = f"{subdir}/{file_name}"
 
 	if settings.STORAGE_PROVIDER.lower() == "s3":
