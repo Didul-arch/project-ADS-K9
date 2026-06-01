@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import Navbar from "../components/Navbar";
-import { Upload, CheckCircle, FileText, ShieldCheck } from "lucide-react";
+import { Upload, CheckCircle, FileText, ShieldCheck, Loader2 } from "lucide-react";
 import { categories, locations } from "../data/mockData";
 import { motion } from "framer-motion";
 import { useLanguage } from "../context/LanguageContext";
@@ -16,6 +16,7 @@ const Report = () => {
   const { refreshItems } = useItems();
 
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [file, setFile] = useState(null);
   const [uploadError, setUploadError] = useState("");
 
@@ -58,6 +59,7 @@ const Report = () => {
       return;
     }
 
+    setSubmitting(true);
     try {
       const path =
         reportType === "lost" ? "/items/report-lost" : "/items/report-found";
@@ -91,6 +93,8 @@ const Report = () => {
     } catch (err) {
       setUploadError("An error occurred. Please try again.");
       console.error("Error reporting to backend DB:", err);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -450,9 +454,28 @@ const Report = () => {
           <button
             type="submit"
             className="btn btn-primary"
-            style={{ width: "100%", padding: "18px" }}
+            disabled={submitting}
+            style={{
+              width: "100%",
+              padding: "18px",
+              opacity: submitting ? 0.7 : 1,
+              cursor: submitting ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+            }}
           >
-            {t("submitReport")}
+            {submitting && (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                style={{ display: "inline-flex" }}
+              >
+                <Loader2 size={18} />
+              </motion.div>
+            )}
+            {submitting ? "Submitting..." : t("submitReport")}
           </button>
         </form>
       </div>
