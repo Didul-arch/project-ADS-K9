@@ -82,7 +82,6 @@ const Detail = () => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-  console.log(itemImage)
   const getContactLink = (info) => {
     if (!info) return "#";
     const lower = info.toLowerCase();

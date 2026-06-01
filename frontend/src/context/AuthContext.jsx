@@ -42,7 +42,6 @@ export const AuthProvider = ({ children }) => {
       }
 
       const dbUser = meResponse.data;
-      console.log('Fetched user data:', dbUser);
 
       // Map backend role enum to frontend roles:
       // Backend: 'admin', 'civitas', 'umum'
