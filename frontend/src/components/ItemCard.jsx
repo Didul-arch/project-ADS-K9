@@ -25,18 +25,18 @@ const ItemCard = ({ item }) => {
     return reportType.toUpperCase();
   };
 
-  // Handle both report_type as string and as enum object
+  // Handle both type as string and as enum object
   const getReportType = () => {
-    if (!item.report_type) return null;
+    if (!item.type) return null;
 
     // If it's already a string, return it
-    if (typeof item.report_type === "string") {
-      return item.report_type;
+    if (typeof item.type === "string") {
+      return item.type;
     }
 
     // If it's an object with value property (enum), get the value
-    if (typeof item.report_type === "object" && item.report_type.value) {
-      return item.report_type.value;
+    if (typeof item.type === "object" && item.type.value) {
+      return item.type.value;
     }
 
     return null;
@@ -139,8 +139,8 @@ const ItemCard = ({ item }) => {
               marginBottom: "12px",
             }}
           >
-            <span className={`badge ${getStatusClass(item.status)}`}>
-              {getStatusLabel(item.status)}
+            <span className={`badge ${getStatusClass(reportType)}`}>
+              {getStatusLabel(reportType)}
             </span>
             <h3 style={{ margin: 0 }}>{item.title || "Untitled Item"}</h3>
           </div>
