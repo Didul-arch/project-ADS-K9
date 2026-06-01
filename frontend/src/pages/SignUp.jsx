@@ -11,9 +11,10 @@ const SignUp = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [identityNumber, setIdentityNumber] = useState('');
   const [identityDocumentFile, setIdentityDocumentFile] = useState(null);
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -43,6 +44,11 @@ const SignUp = () => {
       return;
     }
 
+    if (!phoneNumber.trim()) {
+      setErrorMsg(language === 'en' ? 'Phone number is required.' : 'Nomor telepon wajib diisi.');
+      return;
+    }
+
     // 3. For IPB civitas, require at least one identity field
     const isCivitas = emailLower.endsWith('@apps.ipb.ac.id') || emailLower.endsWith('@ipb.ac.id');
     if (isCivitas) {
@@ -58,7 +64,14 @@ const SignUp = () => {
       }
     }
 
-    const success = await signUp(name, email, password, identityNumber || null, identityDocumentFile || null);
+    const success = await signUp(
+      name,
+      email,
+      password,
+      phoneNumber,
+      identityNumber || null,
+      identityDocumentFile || null,
+    );
     if (success) {
       navigate('/dashboard');
     } else {
@@ -71,19 +84,19 @@ const SignUp = () => {
   };
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      height: '100vh', 
-      background: 'white', 
-      position: 'fixed', 
-      top: 0, 
-      left: 0, 
-      width: '100%', 
+    <div style={{
+      display: 'flex',
+      height: '100vh',
+      background: 'white',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100%',
       zIndex: 1000,
       overflow: 'hidden'
     }}>
       {/* Language Switcher */}
-      <button 
+      <button
         onClick={toggleLanguage}
         style={{
           position: 'absolute',
@@ -108,11 +121,11 @@ const SignUp = () => {
       </button>
 
       {/* Left Column: Form */}
-      <div style={{ 
-        flex: '0 0 45%', 
-        display: 'flex', 
-        flexDirection: 'column', 
-        padding: '30px 50px', 
+      <div style={{
+        flex: '0 0 45%',
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '30px 50px',
         justifyContent: 'center',
         height: '100%',
         overflowY: 'auto',
@@ -123,8 +136,8 @@ const SignUp = () => {
             {language === 'en' ? 'Register IPB Civitas' : 'Daftar Akun Civitas IPB'}
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.4' }}>
-            {language === 'en' 
-              ? 'Exclusively for IPB University students and staff to manage lost and found items.' 
+            {language === 'en'
+              ? 'Exclusively for IPB University students and staff to manage lost and found items.'
               : 'Khusus untuk mahasiswa dan staf IPB University untuk mengelola penemuan barang.'}
           </p>
         </div>
@@ -152,26 +165,39 @@ const SignUp = () => {
           {/* Full Name */}
           <div className="form-group">
             <label style={{ fontSize: '14px' }}>{t('nameLabel')}<span style={{ color: '#4F46E5' }}>*</span></label>
-            <input 
-              type="text" 
-              className="form-input" 
+            <input
+              type="text"
+              className="form-input"
               placeholder={t('namePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              required 
+              required
             />
           </div>
 
           {/* General Email */}
           <div className="form-group">
             <label style={{ fontSize: '14px' }}>{t('emailLabel')}<span style={{ color: '#4F46E5' }}>*</span></label>
-            <input 
-              type="email" 
-              className="form-input" 
-              placeholder="mail@apps.ipb.ac.id" 
+            <input
+              type="email"
+              className="form-input"
+              placeholder="mail@apps.ipb.ac.id"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required 
+              required
+            />
+          </div>
+
+          {/* Phone Number */}
+          <div className="form-group">
+            <label style={{ fontSize: '14px' }}>{t('phoneLabel')}<span style={{ color: '#4F46E5' }}>*</span></label>
+            <input
+              type="tel"
+              className="form-input"
+              placeholder={t('phonePlaceholder')}
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              required
             />
           </div>
 
@@ -207,15 +233,15 @@ const SignUp = () => {
           <div className="form-group" style={{ position: 'relative' }}>
             <label style={{ fontSize: '14px' }}>{t('passwordLabel')}<span style={{ color: '#4F46E5' }}>*</span></label>
             <div style={{ position: 'relative' }}>
-              <input 
-                type={showPassword ? 'text' : 'password'} 
-                className="form-input" 
-                placeholder="Min. 8 characters" 
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="form-input"
+                placeholder="Min. 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required 
+                required
               />
-              <button 
+              <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
@@ -229,15 +255,15 @@ const SignUp = () => {
           <div className="form-group" style={{ position: 'relative' }}>
             <label style={{ fontSize: '14px' }}>{t('confirmPasswordLabel')}<span style={{ color: '#4F46E5' }}>*</span></label>
             <div style={{ position: 'relative' }}>
-              <input 
-                type={showConfirmPassword ? 'text' : 'password'} 
-                className="form-input" 
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                className="form-input"
                 placeholder={t('confirmPasswordPlaceholder')}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                required 
+                required
               />
-              <button 
+              <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
@@ -258,8 +284,8 @@ const SignUp = () => {
       </div>
 
       {/* Right Column: Visual */}
-      <div style={{ 
-        flex: 1, 
+      <div style={{
+        flex: 1,
         background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
         margin: '20px',
         borderRadius: '30px',
@@ -271,8 +297,8 @@ const SignUp = () => {
         position: 'relative',
         overflow: 'hidden'
       }}>
-        <div style={{ 
-          background: 'rgba(255, 255, 255, 0.1)', 
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.1)',
           backdropFilter: 'blur(30px)',
           borderRadius: '30px',
           padding: '40px 30px',
@@ -286,15 +312,15 @@ const SignUp = () => {
           marginBottom: '30px',
           boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)'
         }}>
-          <img 
-            src={ipbLogoWhite} 
-            alt="IPB University" 
-            style={{ 
-              width: '100%', 
-              maxHeight: '75px', 
+          <img
+            src={ipbLogoWhite}
+            alt="IPB University"
+            style={{
+              width: '100%',
+              maxHeight: '75px',
               objectFit: 'contain',
               marginBottom: '20px'
-            }} 
+            }}
           />
           <h2 style={{ fontSize: '22px', fontWeight: '800', color: 'white', letterSpacing: '2px', textTransform: 'uppercase', margin: 0 }}>
             Lost & Found

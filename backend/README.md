@@ -63,4 +63,4 @@ python -m app.seed
 - `DELETE /users/{user_id}` - hapus user untuk admin.
 - `POST /items/report` - melaporkan barang hilang.
 - `GET /items/` - menampilkan daftar item.
-untuk endpoint selengkapnya bisa ke endpoint /docs di web browser kesayangan kalian.
+  untuk endpoint selengkapnya bisa ke endpoint /docs di web browser kesayangan kalian.

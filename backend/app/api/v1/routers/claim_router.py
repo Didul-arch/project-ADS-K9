@@ -20,6 +20,8 @@ from app.infrastructure.db.models.item_model import ItemModel
 
 from app.api.v1.routers.auth_router import get_current_user  # Adjust path if your folder layout is different
 from app.domains.user.entity import UserEntity, Role
+from app.domains.notification.service import NotificationService
+from app.infrastructure.repositories.notification_repository import NotificationRepository
 
 router = APIRouter()
 
@@ -120,6 +122,8 @@ async def create_claim(
 		claim = await service.submit_claim(build_claim(request_type, proof_text, image_path, item_id, current_user.id))
 		history_repo = ActivityHistoryRepository(db)
 		await history_repo.create_request_entry(current_user.id, claim, item)
+		notification_service = NotificationService(NotificationRepository(db))
+		await notification_service.create_for_claim_submission(claim, item.reporter_id, item.title)
 		return {"status": "success", "data": claim}
 	except ValueError as e:
 		raise HTTPException(status_code=400, detail=str(e))
@@ -197,6 +201,9 @@ async def review_claim(
 	history_repo = ActivityHistoryRepository(db)
 	await history_repo.update_request_status_by_claim_id(claim_id, reviewed_claim.status.value)
 
+	notification_service = NotificationService(NotificationRepository(db))
+	await notification_service.create_for_claim_review(reviewed_claim)
+
 	return {"status": "success", "data": reviewed_claim}
 
 
@@ -245,5 +252,52 @@ async def mark_item_returned_from_history(
 
 	history_repo = ActivityHistoryRepository(db)
 	updated_history = await history_repo.mark_user_item_returned(current_user.id, item_id)
+
+	return {"status": "success", "data": updated_history}
+
+
+@router.patch("/claims/{claim_id}/mark-collected")
+async def mark_claim_collected(
+	claim_id: int,
+	db: AsyncSession = Depends(get_db),
+	current_user: UserEntity = Depends(get_current_user),
+):
+	# Verify claim exists
+	claim_repo = ClaimRepository(db)
+	claim_service = ClaimService(claim_repo)
+	claim = await claim_service.get_by_id(claim_id)
+	if not claim:
+		raise HTTPException(status_code=404, detail="Claim tidak ditemukan")
+
+	# Only the claimer can mark collected
+	if current_user.id != claim.claimer_id:
+		raise HTTPException(status_code=403, detail="Hanya claimer yang dapat menandai item sebagai dikumpulkan")
+
+	# Claim must be approved
+	if claim.status != ClaimStatus.APPROVED:
+		raise HTTPException(status_code=400, detail="Claim belum disetujui")
+
+	# Load item and update status
+	item_result = await db.execute(select(ItemModel).where(ItemModel.id == claim.item_id))
+	item = item_result.scalars().first()
+	if not item:
+		raise HTTPException(status_code=404, detail="Item tidak ditemukan")
+
+	if item.status != ItemStatus.RETURNED:
+		item.status = ItemStatus.RETURNED
+		await db.commit()
+		await db.refresh(item)
+
+	# Update activity history for this user/item
+	history_repo = ActivityHistoryRepository(db)
+	updated_history = await history_repo.mark_user_item_returned(current_user.id, item.id)
+
+	# Optionally notify the reporter that item has been returned (reuse NotificationService)
+	try:
+		notification_service = NotificationService(NotificationRepository(db))
+		await notification_service.create_for_claim_review(claim)
+	except Exception:
+		# don't block on notification failures
+		pass
 
 	return {"status": "success", "data": updated_history}
