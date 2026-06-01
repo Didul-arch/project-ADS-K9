@@ -24,13 +24,25 @@ const SignUp = () => {
   const navigate = useNavigate();
   const emailLower = email.trim().toLowerCase();
   const isCivitas = emailLower.endsWith('@apps.ipb.ac.id') || emailLower.endsWith('@ipb.ac.id');
+  const identityFieldLabel = language === 'en'
+    ? isCivitas
+      ? 'Identity (NIM / NIP / KTM / document)'
+      : 'Identity (NIK / SIM / passport / document)'
+    : isCivitas
+      ? 'Identitas (NIM / NIP / KTM / dokumen)'
+      : 'Identitas (NIK / SIM / paspor / dokumen)';
+  const identityFieldPlaceholder = isCivitas ? 'NIM / NIP / KTM / ID Number' : 'NIK / SIM / Passport Number';
+  const identityFieldHint = language === 'en'
+    ? isCivitas
+      ? 'IPB civitas can use NIM, NIP, KTM, or upload an identity document.'
+      : 'General users can use NIK, SIM, passport, or upload an official identity document.'
+    : isCivitas
+      ? 'Civitas IPB bisa pakai NIM, NIP, KTM, atau unggah dokumen identitas.'
+      : 'Pengguna umum bisa pakai NIK, SIM, paspor, atau unggah dokumen identitas resmi.';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
-
-    const emailLower = email.trim().toLowerCase();
-    const isCivitas = emailLower.endsWith('@apps.ipb.ac.id') || emailLower.endsWith('@ipb.ac.id');
 
     if (password !== confirmPassword) {
       setErrorMsg(t('passwordMismatch'));
@@ -48,10 +60,10 @@ const SignUp = () => {
       setErrorMsg(
         language === 'en'
           ? isCivitas
-            ? 'Please provide either your student/staff ID or upload an identity document.'
+            ? 'Please provide either NIM/NIP/KTM or upload an identity document.'
             : 'Please provide either your identity number or upload an official identity document.'
           : isCivitas
-            ? 'Silakan isi NIM/NIP atau unggah dokumen identitas.'
+            ? 'Silakan isi NIM/NIP/KTM atau unggah dokumen identitas.'
             : 'Silakan isi nomor identitas atau unggah dokumen identitas resmi.'
       );
       return;
@@ -206,20 +218,12 @@ const SignUp = () => {
 
           {/* Identity (either number OR upload) */}
           <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <label style={{ fontSize: '14px' }}>
-              {language === 'en'
-                ? isCivitas
-                  ? 'Identity (NIM / NIP / document)'
-                  : 'Identity (NIK / document)'
-                : isCivitas
-                  ? 'Identitas (NIM / NIP / dokumen)'
-                  : 'Identitas (NIK / dokumen)'}
-            </label>
+            <label style={{ fontSize: '14px' }}>{identityFieldLabel}</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <input
                 type="text"
                 className="form-input"
-                placeholder={isCivitas ? 'NIM / NIP / ID Number' : 'NIK / ID Number'}
+                placeholder={identityFieldPlaceholder}
                 value={identityNumber}
                 onChange={(e) => setIdentityNumber(e.target.value)}
                 style={{ flex: 1 }}
@@ -235,11 +239,7 @@ const SignUp = () => {
                 style={{ flex: 1 }}
               />
             </div>
-            <small style={{ color: 'var(--text-secondary)' }}>
-              {language === 'en'
-                ? 'Provide either your identity number or upload an official identity document.'
-                : 'Isi nomor identitas atau unggah dokumen identitas resmi.'}
-            </small>
+            <small style={{ color: 'var(--text-secondary)' }}>{identityFieldHint}</small>
           </div>
 
 
