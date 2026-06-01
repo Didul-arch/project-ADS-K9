@@ -1,7 +1,11 @@
 import React from "react";
 import { MapPin, Calendar, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
-import { getAssetFileName, isPreviewableImage, resolveAssetUrl } from "../lib/assetUrl";
+import {
+  getAssetFileName,
+  isPreviewableImage,
+  resolveAssetUrl,
+} from "../lib/assetUrl";
 
 const ItemCard = ({ item }) => {
   if (!item) return null;
@@ -9,29 +13,32 @@ const ItemCard = ({ item }) => {
   const imageName = getAssetFileName(item.image);
   const canPreviewImage = isPreviewableImage(item.image);
 
-  const getStatusLabel = (status) => {
-    if (!status) return "Unknown";
-    const normalized = status.toLowerCase();
-    if (normalized === "not-returned" || normalized === "not returned") {
-      return "Not Returned";
+  const getStatusLabel = (reportType) => {
+    if (!reportType) return "Unknown";
+    const normalized = reportType.toLowerCase();
+    if (normalized === "lost") {
+      return "LOST";
     }
-    return status;
+    if (normalized === "found") {
+      return "FOUND";
+    }
+    return reportType.toUpperCase();
   };
 
   // Handle both report_type as string and as enum object
   const getReportType = () => {
     if (!item.report_type) return null;
-    
+
     // If it's already a string, return it
-    if (typeof item.report_type === 'string') {
+    if (typeof item.report_type === "string") {
       return item.report_type;
     }
-    
+
     // If it's an object with value property (enum), get the value
-    if (typeof item.report_type === 'object' && item.report_type.value) {
+    if (typeof item.report_type === "object" && item.report_type.value) {
       return item.report_type.value;
     }
-    
+
     return null;
   };
 
@@ -93,8 +100,16 @@ const ItemCard = ({ item }) => {
                 padding: "16px",
               }}
             >
-              <span style={{ fontWeight: 700, fontSize: "13px" }}>Preview unavailable</span>
-              <span style={{ fontSize: "12px", color: "var(--text-secondary)", textAlign: "center" }}>
+              <span style={{ fontWeight: 700, fontSize: "13px" }}>
+                Preview unavailable
+              </span>
+              <span
+                style={{
+                  fontSize: "12px",
+                  color: "var(--text-secondary)",
+                  textAlign: "center",
+                }}
+              >
                 {imageName || "Open file"}
               </span>
             </a>
