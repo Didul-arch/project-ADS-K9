@@ -117,7 +117,29 @@ const Dashboard = () => {
     >
       <Navbar title={isAdmin ? "Admin Dashboard" : t("dashboard")} />
 
-      {isAdmin ? (
+      {!user ? (
+        <div
+          className="glass"
+          style={{
+            background: "white",
+            padding: "40px",
+            maxWidth: "720px",
+            margin: "0 auto",
+            textAlign: "center",
+          }}
+        >
+          <h2 style={{ marginBottom: "12px" }}>{t("signIn")}</h2>
+          <p style={{ marginBottom: "24px", color: "var(--text-secondary)" }}>
+            {t("Login Required")}
+          </p>
+          <button
+            className="btn btn-primary"
+            onClick={() => navigate("/login")}
+          >
+            {t("signIn")}
+          </button>
+        </div>
+      ) : isAdmin ? (
         <>
           <div
             className="glass card-shadow"
