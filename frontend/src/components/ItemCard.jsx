@@ -18,9 +18,28 @@ const ItemCard = ({ item }) => {
     return status;
   };
 
-  const getStatusClass = (status) => {
-    if (!status) return "";
-    switch (status.toLowerCase()) {
+  // Handle both report_type as string and as enum object
+  const getReportType = () => {
+    if (!item.report_type) return null;
+    
+    // If it's already a string, return it
+    if (typeof item.report_type === 'string') {
+      return item.report_type;
+    }
+    
+    // If it's an object with value property (enum), get the value
+    if (typeof item.report_type === 'object' && item.report_type.value) {
+      return item.report_type.value;
+    }
+    
+    return null;
+  };
+
+  const reportType = getReportType();
+
+  const getStatusClass = (report_type) => {
+    if (!report_type) return "";
+    switch (report_type.toLowerCase()) {
       case "lost":
         return "badge-lost";
       case "found":
