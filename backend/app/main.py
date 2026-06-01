@@ -21,6 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 async def lifespan(app: FastAPI):
     Path("storage").mkdir(parents=True, exist_ok=True)
     Path(settings.CLAIM_UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
+    Path(settings.IDENTITY_DOCUMENT_UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
     yield
 
 
