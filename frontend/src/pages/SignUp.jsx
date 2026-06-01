@@ -22,13 +22,14 @@ const SignUp = () => {
   const { signUp } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
   const navigate = useNavigate();
+  const emailLower = email.trim().toLowerCase();
+  const isCivitas = emailLower.endsWith('@apps.ipb.ac.id') || emailLower.endsWith('@ipb.ac.id');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
     // 1. Domain verification (Exclusively IPB Apps email)
-    const emailLower = email.trim().toLowerCase();
     if (!emailLower.endsWith('@apps.ipb.ac.id') && !emailLower.endsWith('@ipb.ac.id')) {
       setErrorMsg(
         language === 'en'
@@ -50,7 +51,6 @@ const SignUp = () => {
     }
 
     // 3. For IPB civitas, require at least one identity field
-    const isCivitas = emailLower.endsWith('@apps.ipb.ac.id') || emailLower.endsWith('@ipb.ac.id');
     if (isCivitas) {
       const idNum = (identityNumber || '').toString().trim();
       const idDoc = identityDocumentFile;
