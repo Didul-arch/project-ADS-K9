@@ -7,7 +7,7 @@ from app.domains.user.entity import UserEntity, Role
 from app.domains.user.service import UserService
 from app.infrastructure.db.session import get_db
 from app.infrastructure.repositories.user_repository import UserRepository
-from app.infrastructure.storage.file_storage import save_upload_file
+from app.infrastructure.storage.file_storage import save_upload_file, get_accessible_file_url
 
 router = APIRouter()
 
@@ -24,7 +24,7 @@ def build_user_response(user: UserEntity) -> UserResponse:
         is_active=user.is_active,
         role=user.role.value if hasattr(user.role, 'value') else str(user.role),
         identity_number=getattr(user, 'identity_number', None),
-        identity_document=getattr(user, 'identity_document', None),
+        identity_document=get_accessible_file_url(getattr(user, 'identity_document', None)),
     )
 
 

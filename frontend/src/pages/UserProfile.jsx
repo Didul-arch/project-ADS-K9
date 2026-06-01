@@ -12,6 +12,7 @@ import {
 import { motion } from "framer-motion";
 import { apiJson } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { resolveAssetUrl, isPreviewableImage as isPreviewableDocument } from "../lib/assetUrl";
 
 const ROLE_OPTIONS = [
   { value: "admin", label: "Admin" },
@@ -33,20 +34,7 @@ const getDocumentFileName = (value) => {
 const getApiBaseUrl = () =>
   (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 
-const getDocumentUrl = (value) => {
-  if (!value) {
-    return "";
-  }
-
-  if (/^https?:\/\//i.test(value)) {
-    return value;
-  }
-
-  return `${getApiBaseUrl()}${value}`;
-};
-
-const isPreviewableDocument = (value) =>
-  /\.(png|jpe?g|webp|gif)$/i.test(getDocumentFileName(value));
+const getDocumentUrl = (value) => resolveAssetUrl(value);
 
 const UserProfile = () => {
   const { id } = useParams();
@@ -495,7 +483,7 @@ const UserProfile = () => {
                   Identity Document
                 </span>
                 {profile?.identity_document &&
-                isPreviewableDocument(profile.identity_document) ? (
+                  isPreviewableDocument(profile.identity_document) ? (
                   <div
                     style={{
                       border: "1px solid #e5e7eb",

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, CheckCircle, Upload, X } from "lucide-react";
+import { ArrowLeft, CheckCircle, Upload, X, Loader2 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
@@ -20,6 +20,7 @@ const Claim = () => {
   const [proofText, setProofText] = useState("");
   const [proofImage, setProofImage] = useState(null);
   const [formError, setFormError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const fileInputRef = useRef(null);
 
@@ -71,6 +72,7 @@ const Claim = () => {
     }
 
     setFormError("");
+    setSubmitting(true);
 
     try {
       const formData = new FormData();
@@ -91,6 +93,8 @@ const Claim = () => {
     } catch (error) {
       console.error("Claim submit failed:", error);
       setFormError("Failed to submit claim. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -102,7 +106,34 @@ const Claim = () => {
   };
 
   if (loading) {
-    return <div style={{ padding: "40px" }}>Loading...</div>;
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        style={{ padding: '40px' }}
+      >
+        <Navbar title={t("claimTitle")} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '28px' }}>
+          {[0, 1].map((i) => (
+            <div
+              key={i}
+              style={{
+                background: 'white',
+                borderRadius: '28px',
+                padding: '28px',
+                boxShadow: '0px 18px 40px rgba(112, 144, 176, 0.12)',
+              }}
+            >
+              <div style={{ width: '40%', height: 24, borderRadius: 8, background: 'linear-gradient(90deg, #e8ecf1 25%, #f3f6f9 37%, #e8ecf1 63%)', backgroundSize: '800px 100%', animation: 'um-shimmer 1.6s ease-in-out infinite', marginBottom: 16 }} />
+              <div style={{ width: '100%', height: 200, borderRadius: 18, background: 'linear-gradient(90deg, #e8ecf1 25%, #f3f6f9 37%, #e8ecf1 63%)', backgroundSize: '800px 100%', animation: 'um-shimmer 1.6s ease-in-out infinite', marginBottom: 16 }} />
+              <div style={{ width: '80%', height: 14, borderRadius: 8, background: 'linear-gradient(90deg, #e8ecf1 25%, #f3f6f9 37%, #e8ecf1 63%)', backgroundSize: '800px 100%', animation: 'um-shimmer 1.6s ease-in-out infinite', marginBottom: 10 }} />
+              <div style={{ width: '60%', height: 14, borderRadius: 8, background: 'linear-gradient(90deg, #e8ecf1 25%, #f3f6f9 37%, #e8ecf1 63%)', backgroundSize: '800px 100%', animation: 'um-shimmer 1.6s ease-in-out infinite' }} />
+            </div>
+          ))}
+        </div>
+        <style>{`@keyframes um-shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }`}</style>
+      </motion.div>
+    );
   }
 
   if (!item) {
@@ -375,9 +406,28 @@ const Claim = () => {
             <button
               type="submit"
               className="btn btn-primary"
-              style={{ width: "100%", padding: "16px" }}
+              disabled={submitting}
+              style={{
+                width: "100%",
+                padding: "16px",
+                opacity: submitting ? 0.7 : 1,
+                cursor: submitting ? "not-allowed" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+              }}
             >
-              {t("submitClaim")}
+              {submitting && (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                  style={{ display: "inline-flex" }}
+                >
+                  <Loader2 size={18} />
+                </motion.div>
+              )}
+              {submitting ? "Submitting..." : t("submitClaim")}
             </button>
           </form>
         </div>
