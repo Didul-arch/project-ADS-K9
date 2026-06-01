@@ -36,20 +36,19 @@ class UserService:
         cleaned = identity_document.strip()
         return cleaned or None
 
-    def _ensure_civitas_identity(
+    def _ensure_identity(
         self,
-        current_user: UserEntity,
         identity_number: str | None,
         identity_document: str | None,
     ) -> None:
         has_identity = any(
             [
-                (identity_number or current_user.identity_number or "").strip(),
-                (identity_document or current_user.identity_document or "").strip(),
+                (identity_number or "").strip(),
+                (identity_document or "").strip(),
             ]
         )
         if not has_identity:
-            raise ValueError("Civitas users must provide either identity_number or identity_document")
+            raise ValueError("User harus mengisi identity_number atau identity_document")
 
     async def update_user_profile(
         self,
@@ -69,7 +68,14 @@ class UserService:
         resolved_identity_document = self._normalize_identity_document(identity_document)
 
         if target_role == Role.CIVITAS:
-            self._ensure_civitas_identity(current_user, identity_number, resolved_identity_document)
+            has_identity = any(
+                [
+                    (identity_number or current_user.identity_number or "").strip(),
+                    (resolved_identity_document or current_user.identity_document or "").strip(),
+                ]
+            )
+            if not has_identity:
+                raise ValueError("Civitas users must provide either identity_number or identity_document")
 
         updated_user = await self.user_repo.update(
             user_id,
@@ -132,7 +138,6 @@ class UserService:
         if user.identity_document is not None:
             user.identity_document = user.identity_document.strip() or None
 
-        if user.role == Role.CIVITAS and not (user.identity_number or user.identity_document):
-            raise ValueError("Civitas users must provide either identity_number or identity_document")
+        self._ensure_identity(user.identity_number, user.identity_document)
 
         return await self.user_repo.create(user)
