@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
-import { useItems } from "../context/ItemsContext";
 import { Clock, CheckCircle, ChevronRight, HelpCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { apiJson } from "../lib/api";
@@ -12,24 +11,8 @@ const History = () => {
   const navigate = useNavigate();
   const { user, token } = useAuth();
   const { language } = useLanguage();
-  const { items: allItems } = useItems();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const toFallbackHistory = (items) =>
-    items.map((item) => ({
-      id: item.id,
-      item_id: item.id,
-      claim_id: null,
-      kind: "report",
-      report_type: item.type,
-      request_type: null,
-      item_status: item.status ? item.status.toLowerCase() : null,
-      request_status: null,
-      title: item.title,
-      category: item.category,
-      created_at: item.date ? new Date(item.date).toISOString() : null,
-    }));
 
   const getActivityLabel = (activity) => {
     const kind = activity.kind || "report";
@@ -135,30 +118,16 @@ const History = () => {
           return;
         }
 
-        const stored = localStorage.getItem("reported_items");
-        const localOnly = stored ? JSON.parse(stored) : [];
-        const guestFiltered = allItems.filter(
-          (item) =>
-            localOnly.some((localItem) => localItem.id == item.id) ||
-            !item.reporterEmail ||
-            item.reporterEmail === "Guest" ||
-            item.reporterEmail.includes("@") === false,
-        );
-
         if (!mounted) return;
 
-        setHistory(toFallbackHistory(guestFiltered));
+        setHistory([]);
       } catch (error) {
         console.error("Failed to load history:", error);
 
         if (!mounted) return;
 
         if (user) {
-          const userFiltered = allItems.filter(
-            (item) =>
-              item.reporterEmail === user.email || item.reporterId === user.id,
-          );
-          setHistory(toFallbackHistory(userFiltered));
+          setHistory([]);
         } else {
           setHistory([]);
         }
@@ -174,7 +143,7 @@ const History = () => {
     return () => {
       mounted = false;
     };
-  }, [user, token, allItems]);
+  }, [user, token]);
 
   const titleText =
     language === "en" ? "My Activity History" : "Riwayat Aktivitas Saya";

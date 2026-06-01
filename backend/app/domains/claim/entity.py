@@ -26,13 +26,16 @@ class ClaimEntity:
     created_at: datetime
     updated_at: datetime | None
 
-    def update_status(self, new_status: ClaimStatus, reviewer_id: int):
+    def approve(self, reviewer_id: int):
         if self.status != ClaimStatus.PENDING:
             raise ValueError("Claim yang sudah diproses tidak bisa diubah lagi.")
+        self.status = ClaimStatus.APPROVED
+        self.reviewer_id = reviewer_id
+        self.updated_at = datetime.now()
 
-        if new_status not in {ClaimStatus.APPROVED, ClaimStatus.REJECTED}:
-            raise ValueError("Status claim hanya boleh diubah ke approved atau rejected.")
-
-        self.status = new_status
+    def reject(self, reviewer_id: int):
+        if self.status != ClaimStatus.PENDING:
+            raise ValueError("Claim yang sudah diproses tidak bisa diubah lagi.")
+        self.status = ClaimStatus.REJECTED
         self.reviewer_id = reviewer_id
         self.updated_at = datetime.now()

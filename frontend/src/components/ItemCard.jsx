@@ -1,18 +1,22 @@
 import React from "react";
 import { MapPin, Calendar, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
+import { getAssetFileName, isPreviewableImage, resolveAssetUrl } from "../lib/assetUrl";
 
 const ItemCard = ({ item }) => {
   if (!item) return null;
-  
-  // Debug: log item structure to check what fields are available
-  console.log("ItemCard item:", item);
-  
-  const baseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
-  const imageUrl =
-    item.image && item.image.startsWith("/")
-      ? `${baseUrl}${item.image}`
-      : item.image;
+  const imageUrl = resolveAssetUrl(item.image);
+  const imageName = getAssetFileName(item.image);
+  const canPreviewImage = isPreviewableImage(item.image);
+
+  const getStatusLabel = (status) => {
+    if (!status) return "Unknown";
+    const normalized = status.toLowerCase();
+    if (normalized === "not-returned" || normalized === "not returned") {
+      return "Not Returned";
+    }
+    return status;
+  };
 
   // Handle both report_type as string and as enum object
   const getReportType = () => {
@@ -40,6 +44,9 @@ const ItemCard = ({ item }) => {
         return "badge-lost";
       case "found":
         return "badge-found";
+      case "not-returned":
+      case "not returned":
+        return "badge-not-returned";
       case "returned":
         return "badge-returned";
       default:
@@ -62,14 +69,40 @@ const ItemCard = ({ item }) => {
         <div
           style={{ position: "relative", height: "180px", overflow: "hidden" }}
         >
-          <img
-            src={imageUrl}
-            alt={item.title || "Item"}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
+          {canPreviewImage ? (
+            <img
+              src={imageUrl}
+              alt={item.title || "Item"}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
+            <a
+              href={imageUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "column",
+                gap: "6px",
+                textDecoration: "none",
+                background: "#F8FAFC",
+                color: "var(--text-primary)",
+                padding: "16px",
+              }}
+            >
+              <span style={{ fontWeight: 700, fontSize: "13px" }}>Preview unavailable</span>
+              <span style={{ fontSize: "12px", color: "var(--text-secondary)", textAlign: "center" }}>
+                {imageName || "Open file"}
+              </span>
+            </a>
+          )}
           <div style={{ position: "absolute", top: "12px", left: "12px" }}>
-            <span className={`badge ${getStatusClass(reportType)}`}>
-              {reportType || "Unknown"}
+            <span className={`badge ${getStatusClass(item.status)}`}>
+              {getStatusLabel(item.status)}
             </span>
           </div>
         </div>
@@ -92,8 +125,8 @@ const ItemCard = ({ item }) => {
               marginBottom: "12px",
             }}
           >
-            <span className={`badge ${getStatusClass(reportType)}`}>
-              {reportType || "Unknown"}
+            <span className={`badge ${getStatusClass(item.status)}`}>
+              {getStatusLabel(item.status)}
             </span>
             <h3 style={{ margin: 0 }}>{item.title || "Untitled Item"}</h3>
           </div>

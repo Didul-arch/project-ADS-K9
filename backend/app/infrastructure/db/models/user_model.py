@@ -3,7 +3,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.domains.user.entity import Role
 from app.infrastructure.db.session import Base
 
-
 class UserModel(Base):
     __tablename__ = "users"
 
@@ -15,7 +14,15 @@ class UserModel(Base):
     full_name: Mapped[str] = mapped_column(String, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     password_hash: Mapped[str] = mapped_column(String, nullable=False)
-    role: Mapped[Role] = mapped_column(
-        Enum(Role), default=Role.UMUM
-    )
-    
+    role: Mapped[Role] = mapped_column(Enum(Role), default=Role.UMUM)
+
+    __mapper_args__ = {
+        "polymorphic_on": "role",
+        "polymorphic_identity": Role.UMUM,
+    }
+
+
+class AdminModel(UserModel):
+    __mapper_args__ = {
+        "polymorphic_identity": Role.ADMIN,
+    }

@@ -1,6 +1,4 @@
 from datetime import date, datetime
-from pathlib import Path
-from uuid import uuid4
 
 from sqlalchemy import select
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
@@ -9,14 +7,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.schemas.claim_schema import ReviewClaimRequest
 from app.domains.claim.entity import ClaimEntity, ClaimStatus, RequestType
 from app.domains.item.entity import ItemStatus
+from app.domains.item.service import ItemService
 from app.domains.claim.service import ClaimService
 from app.infrastructure.db.session import get_db
 from app.infrastructure.repositories.activity_history_repository import ActivityHistoryRepository
 from app.infrastructure.repositories.claim_repository import ClaimRepository
 from app.infrastructure.repositories.item_repository import ItemRepository
-from app.infrastructure.config.settings import settings
 from app.infrastructure.db.models.claim_model import ClaimModel
 from app.infrastructure.db.models.item_model import ItemModel
+from app.infrastructure.storage.file_storage import save_upload_file
+from app.infrastructure.storage.file_storage import get_accessible_file_url
 
 from app.api.v1.routers.auth_router import get_current_user  # Adjust path if your folder layout is different
 from app.domains.user.entity import UserEntity, Role
@@ -26,14 +26,7 @@ from app.infrastructure.repositories.notification_repository import Notification
 router = APIRouter()
 
 def save_claim_proof_image(upload_file: UploadFile) -> str:
-	storage_dir = Path(settings.CLAIM_UPLOAD_DIR)
-	storage_dir.mkdir(parents=True, exist_ok=True)
-	extension = Path(upload_file.filename or "proof").suffix or ".jpg"
-	file_name = f"{uuid4().hex}{extension}"
-	file_path = storage_dir / file_name
-	content = upload_file.file.read()
-	file_path.write_bytes(content)
-	return f"/storage/claims/{file_name}"
+	return save_upload_file(upload_file, subdir="claims", default_extension=".jpg")
 
 
 # Updated helper to accept the authenticating user's ID
@@ -70,7 +63,7 @@ def build_history_item_entry(item: ItemModel) -> dict:
 		"description": item.description,
 		"location": item.location,
 		"category": item.category,
-		"image": item.image,
+		"image": get_accessible_file_url(item.image),
 		"created_at": item.created_at.isoformat() if item.created_at else None,
 		"item_status": item.status.value if hasattr(item.status, "value") else str(item.status),
 		"request_status": None,
@@ -91,7 +84,7 @@ def build_history_request_entry(claim: ClaimModel, item: ItemModel) -> dict:
 		"description": item.description,
 		"location": item.location,
 		"category": item.category,
-		"image": item.image,
+		"image": get_accessible_file_url(item.image),
 		"created_at": claim.created_at.isoformat() if claim.created_at else None,
 		"item_status": item_status,
 		"request_status": request_status,
@@ -258,46 +251,40 @@ async def mark_item_returned_from_history(
 
 @router.patch("/claims/{claim_id}/mark-collected")
 async def mark_claim_collected(
-	claim_id: int,
-	db: AsyncSession = Depends(get_db),
-	current_user: UserEntity = Depends(get_current_user),
+    claim_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserEntity = Depends(get_current_user),
 ):
-	# Verify claim exists
-	claim_repo = ClaimRepository(db)
-	claim_service = ClaimService(claim_repo)
-	claim = await claim_service.get_by_id(claim_id)
-	if not claim:
-		raise HTTPException(status_code=404, detail="Claim tidak ditemukan")
+    # Verify claim exists
+    claim_service = ClaimService(ClaimRepository(db))
+    claim = await claim_service.get_by_id(claim_id)
+    if not claim:
+        raise HTTPException(status_code=404, detail="Claim tidak ditemukan")
 
-	# Only the claimer can mark collected
-	if current_user.id != claim.claimer_id:
-		raise HTTPException(status_code=403, detail="Hanya claimer yang dapat menandai item sebagai dikumpulkan")
+    # Only the claimer can mark collected
+    if current_user.id != claim.claimer_id:
+        raise HTTPException(status_code=403, detail="Hanya claimer yang dapat menandai item sebagai dikumpulkan")
 
-	# Claim must be approved
-	if claim.status != ClaimStatus.APPROVED:
-		raise HTTPException(status_code=400, detail="Claim belum disetujui")
+    # Claim must be approved
+    if claim.status != ClaimStatus.APPROVED:
+        raise HTTPException(status_code=400, detail="Claim belum disetujui")
 
-	# Load item and update status
-	item_result = await db.execute(select(ItemModel).where(ItemModel.id == claim.item_id))
-	item = item_result.scalars().first()
-	if not item:
-		raise HTTPException(status_code=404, detail="Item tidak ditemukan")
+    # Update item status lewat service — tidak langsung ke DB
+    item_service = ItemService(ItemRepository(db))
+    try:
+        await item_service.update_status(claim.item_id, ItemStatus.RETURNED)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
 
-	if item.status != ItemStatus.RETURNED:
-		item.status = ItemStatus.RETURNED
-		await db.commit()
-		await db.refresh(item)
+    # Update activity history
+    history_repo = ActivityHistoryRepository(db)
+    updated_history = await history_repo.mark_user_item_returned(current_user.id, claim.item_id)
 
-	# Update activity history for this user/item
-	history_repo = ActivityHistoryRepository(db)
-	updated_history = await history_repo.mark_user_item_returned(current_user.id, item.id)
+    # Notify — tidak block kalau gagal
+    try:
+        notification_service = NotificationService(NotificationRepository(db))
+        await notification_service.create_for_claim_review(claim)
+    except Exception:
+        pass
 
-	# Optionally notify the reporter that item has been returned (reuse NotificationService)
-	try:
-		notification_service = NotificationService(NotificationRepository(db))
-		await notification_service.create_for_claim_review(claim)
-	except Exception:
-		# don't block on notification failures
-		pass
-
-	return {"status": "success", "data": updated_history}
+    return {"status": "success", "data": updated_history}

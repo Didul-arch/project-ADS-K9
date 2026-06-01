@@ -15,6 +15,7 @@ import { motion } from "framer-motion";
 import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 import { apiJson } from "../lib/api";
+import { resolveAssetUrl } from "../lib/assetUrl";
 
 const DetailClaim = () => {
   const { id } = useParams();
@@ -120,11 +121,7 @@ const DetailClaim = () => {
   if (loading) return <div>{t("loading") || "Loading..."}</div>;
   if (!claim) return <div>{t("claimNotFound") || "Claim not found"}</div>;
 
-  const baseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
-  const proofImage =
-    claim.proof_image && claim.proof_image.startsWith("/")
-      ? `${baseUrl}${claim.proof_image}`
-      : claim.proof_image;
+  const proofImage = resolveAssetUrl(claim.proof_image);
 
   const displayDate = claim?.created_at
     ? new Date(claim.created_at).toLocaleString()

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.schemas.user_schema import CreateUserRequest, UserResponse
 from app.api.v1.schemas.auth_schema import Token
-from app.domains.user.entity import UserEntity, Role
+from app.domains.user.entity import UserEntity
 from app.domains.user.service import UserService, DuplicateUserError
 from app.infrastructure.db.session import get_db
 from app.infrastructure.repositories.user_repository import UserRepository
@@ -32,7 +32,7 @@ async def create_user(payload: CreateUserRequest, db: AsyncSession = Depends(get
 		is_active=True,
 	)
 	try:
-		created_user = await service.create_user(user_data)
+		created_user = await service.register(user_data)
 	except DuplicateUserError as e:
 		raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 	except ValueError as e:
