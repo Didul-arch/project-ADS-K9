@@ -23,7 +23,7 @@ const Login = () => {
 
     const success = await login(email, password);
     if (success) {
-      navigate("/dashboard");
+      navigate("/home");
     } else {
       setErrorMsg(t("invalidCredentials"));
     }
@@ -135,7 +135,7 @@ const Login = () => {
               <input
                 type={showPassword ? "text" : "password"}
                 className="form-input"
-                placeholder="Min. 8 characters"
+                placeholder="Insert Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
