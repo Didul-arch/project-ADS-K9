@@ -46,7 +46,7 @@ const Detail = () => {
                 if (!mounted) return;
                 if (u.ok && u.data) setReporter(u.data);
               })
-              .catch(() => {});
+              .catch(() => { });
           }
         } else setItem(null);
       })

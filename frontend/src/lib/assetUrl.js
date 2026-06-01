@@ -1,7 +1,9 @@
 export function resolveAssetUrl(assetPath) {
   if (!assetPath) return "";
 
-  const normalizedAssetPath = assetPath.trim().replace(/^(https?)\/\//i, "$1://");
+  const normalizedAssetPath = assetPath
+    .trim()
+    .replace(/^(https?)\/\//i, "$1://");
 
   if (
     normalizedAssetPath.startsWith("http://") ||
@@ -13,7 +15,10 @@ export function resolveAssetUrl(assetPath) {
   }
 
   const apiBase = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
-  const storageBase = (import.meta.env.VITE_STORAGE_BASE_URL || "").replace(/\/$/, "");
+  const storageBase = (import.meta.env.VITE_STORAGE_BASE_URL || "").replace(
+    /\/$/,
+    "",
+  );
 
   if (normalizedAssetPath.startsWith("/storage/")) {
     return apiBase ? `${apiBase}${normalizedAssetPath}` : normalizedAssetPath;

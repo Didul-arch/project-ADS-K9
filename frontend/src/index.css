@@ -77,9 +77,23 @@ ul {
 }
 
 /* Typography override */
-h1 { font-size: 34px; font-weight: 700; color: var(--text-primary); }
-h2 { font-size: 24px; font-weight: 700; color: var(--text-primary); }
-h3 { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+h1 {
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
 
 /* Buttons */
 .btn {
@@ -151,10 +165,25 @@ h3 { font-size: 18px; font-weight: 700; color: var(--text-primary); }
   text-transform: uppercase;
 }
 
-.badge-lost { background: #FFE5E5; color: #EE5D50; }
-.badge-found { background: #E2F9EB; color: #01B574; }
-.badge-not-returned { background: #FFF4DB; color: #B45309; }
-.badge-returned { background: #E1F0FE; color: #0075FF; }
+.badge-lost {
+  background: #FFE5E5;
+  color: #EE5D50;
+}
+
+.badge-found {
+  background: #E2F9EB;
+  color: #01B574;
+}
+
+.badge-not-returned {
+  background: #FFF4DB;
+  color: #B45309;
+}
+
+.badge-returned {
+  background: #E1F0FE;
+  color: #0075FF;
+}
 
 /* Scrollbar */
 ::-webkit-scrollbar {
