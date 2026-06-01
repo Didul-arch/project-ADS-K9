@@ -101,7 +101,7 @@ const ItemCard = ({ item }) => {
           )}
           <div style={{ position: "absolute", top: "12px", left: "12px" }}>
             <span className={`badge ${getStatusClass(item.report_type)}`}>
-              {getStatusLabel(item.status)}
+              {getStatusLabel(item.report_type)}
             </span>
           </div>
         </div>

@@ -461,7 +461,7 @@ const Dashboard = () => {
             </div>
             <div>
               <h1 style={{ fontSize: "28px", marginBottom: "8px" }}>
-                {t("welcome")}, {userName}! 👋
+                {t("Welcome")}, {userName}! 👋
               </h1>
               <p>
                 {t("activeReportsMsg", { count: userReports.length, notif: 0 })}

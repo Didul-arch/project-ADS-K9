@@ -23,7 +23,7 @@ const Login = () => {
 
     const success = await login(email, password);
     if (success) {
-      navigate("/home");
+      navigate("/");
     } else {
       setErrorMsg(t("invalidCredentials"));
     }
