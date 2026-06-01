@@ -9,6 +9,7 @@ from app.infrastructure.db.models.activity_history_model import (
     ActivityHistoryKind,
     ActivityHistoryModel,
 )
+from app.infrastructure.storage.file_storage import get_accessible_file_url, get_storage_reference
 
 
 class ActivityHistoryRepository:
@@ -26,7 +27,7 @@ class ActivityHistoryRepository:
             "description": history.description,
             "location": history.location,
             "category": history.category,
-            "image": history.image,
+            "image": get_accessible_file_url(history.image),
             "report_type": history.report_type,
             "item_status": history.item_status,
             "request_status": history.request_status,
@@ -50,7 +51,7 @@ class ActivityHistoryRepository:
             description=item.description,
             location=item.location,
             category=item.category,
-            image=item.image,
+            image=get_storage_reference(item.image),
             created_at=item.created_at,
             updated_at=None,
             completed_at=None,
@@ -74,7 +75,7 @@ class ActivityHistoryRepository:
             description=item.description,
             location=item.location,
             category=item.category,
-            image=item.image,
+            image=get_storage_reference(item.image),
             created_at=claim.created_at,
             updated_at=claim.updated_at,
             completed_at=claim.reviewed_at,

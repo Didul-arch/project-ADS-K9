@@ -15,6 +15,7 @@ import {
 import { motion } from "framer-motion";
 import { useLanguage } from "../context/LanguageContext";
 import { apiJson } from "../lib/api";
+import { getAssetFileName, isPreviewableImage, resolveAssetUrl } from "../lib/assetUrl";
 
 const Detail = () => {
   const { id } = useParams();
@@ -45,7 +46,7 @@ const Detail = () => {
                 if (!mounted) return;
                 if (u.ok && u.data) setReporter(u.data);
               })
-              .catch(() => {});
+              .catch(() => { });
           }
         } else setItem(null);
       })
@@ -64,11 +65,10 @@ const Detail = () => {
 
   if (loadingItem) return <div>Loading...</div>;
   if (!item) return <div>Item not found</div>;
-  const baseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
-  const itemImage =
-    item.image && item.image.startsWith("/")
-      ? `${baseUrl}${item.image}`
-      : item.image;
+  const itemImage = resolveAssetUrl(item.image);
+  const itemImageName = getAssetFileName(item.image);
+  const canPreviewItemImage = isPreviewableImage(item.image);
+  console.log(itemImage)
   const displayDate = item?.created_at
     ? new Date(item.created_at).toLocaleString()
     : item?.date || "-";
@@ -85,7 +85,6 @@ const Detail = () => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
   const getContactLink = (info) => {
     if (!info) return "#";
     const lower = info.toLowerCase();
@@ -112,6 +111,9 @@ const Detail = () => {
         return "badge-lost";
       case "found":
         return "badge-found";
+      case "not-returned":
+      case "not returned":
+        return "badge-not-returned";
       case "returned":
         return "badge-returned";
       default:
@@ -162,11 +164,40 @@ const Detail = () => {
                 boxShadow: "0px 18px 40px rgba(112, 144, 176, 0.12)",
               }}
             >
-              <img
-                src={itemImage}
-                alt={item.title}
-                style={{ width: "100%", height: "500px", objectFit: "cover" }}
-              />
+              {canPreviewItemImage ? (
+                <img
+                  src={itemImage}
+                  alt={item.title}
+                  style={{ width: "100%", height: "500px", objectFit: "cover" }}
+                />
+              ) : (
+                <a
+                  href={itemImage}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    width: "100%",
+                    height: "500px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexDirection: "column",
+                    gap: "10px",
+                    textDecoration: "none",
+                    color: "var(--text-primary)",
+                    background: "#F8FAFC",
+                    padding: "24px",
+                  }}
+                >
+                  <div style={{ fontWeight: 700 }}>Preview not available for this file type</div>
+                  <div style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
+                    {itemImageName || "Open image"}
+                  </div>
+                  <span className="btn btn-primary" style={{ width: "fit-content" }}>
+                    Open image
+                  </span>
+                </a>
+              )}
             </div>
           ) : null}
 

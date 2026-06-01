@@ -22,23 +22,28 @@ const SignUp = () => {
   const { signUp } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
   const navigate = useNavigate();
+  const emailLower = email.trim().toLowerCase();
+  const isCivitas = emailLower.endsWith('@apps.ipb.ac.id') || emailLower.endsWith('@ipb.ac.id');
+  const identityFieldLabel = language === 'en'
+    ? isCivitas
+      ? 'Identity (NIM / NIP / KTM / document)'
+      : 'Identity (NIK / SIM / passport / document)'
+    : isCivitas
+      ? 'Identitas (NIM / NIP / KTM / dokumen)'
+      : 'Identitas (NIK / SIM / paspor / dokumen)';
+  const identityFieldPlaceholder = isCivitas ? 'NIM / NIP / KTM / ID Number' : 'NIK / SIM / Passport Number';
+  const identityFieldHint = language === 'en'
+    ? isCivitas
+      ? 'IPB civitas can use NIM, NIP, KTM, or upload an identity document.'
+      : 'General users can use NIK, SIM, passport, or upload an official identity document.'
+    : isCivitas
+      ? 'Civitas IPB bisa pakai NIM, NIP, KTM, atau unggah dokumen identitas.'
+      : 'Pengguna umum bisa pakai NIK, SIM, paspor, atau unggah dokumen identitas resmi.';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
-    // 1. Domain verification (Exclusively IPB Apps email)
-    const emailLower = email.trim().toLowerCase();
-    if (!emailLower.endsWith('@apps.ipb.ac.id') && !emailLower.endsWith('@ipb.ac.id')) {
-      setErrorMsg(
-        language === 'en'
-          ? 'Registration is exclusively for IPB Civitas. Public users can report items directly without an account!'
-          : 'Pendaftaran ini khusus untuk Civitas IPB. Pengguna umum dapat langsung melaporkan barang tanpa perlu akun!'
-      );
-      return;
-    }
-
-    // 2. Password matching validation
     if (password !== confirmPassword) {
       setErrorMsg(t('passwordMismatch'));
       return;
@@ -49,19 +54,19 @@ const SignUp = () => {
       return;
     }
 
-    // 3. For IPB civitas, require at least one identity field
-    const isCivitas = emailLower.endsWith('@apps.ipb.ac.id') || emailLower.endsWith('@ipb.ac.id');
-    if (isCivitas) {
-      const idNum = (identityNumber || '').toString().trim();
-      const idDoc = identityDocumentFile;
-      if (!idNum && !idDoc) {
-        setErrorMsg(
-          language === 'en'
-            ? 'Please provide either your identity number or upload an identity document.'
-            : 'Silakan isi NIM/NIP atau unggah dokumen identitas.'
-        );
-        return;
-      }
+    const idNum = (identityNumber || '').toString().trim();
+    const idDoc = identityDocumentFile;
+    if (!idNum && !idDoc) {
+      setErrorMsg(
+        language === 'en'
+          ? isCivitas
+            ? 'Please provide either NIM/NIP/KTM or upload an identity document.'
+            : 'Please provide either your identity number or upload an official identity document.'
+          : isCivitas
+            ? 'Silakan isi NIM/NIP/KTM atau unggah dokumen identitas.'
+            : 'Silakan isi nomor identitas atau unggah dokumen identitas resmi.'
+      );
+      return;
     }
 
     const success = await signUp(
@@ -133,12 +138,22 @@ const SignUp = () => {
       }}>
         <div style={{ marginBottom: '20px' }}>
           <h1 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '6px', color: 'var(--ipb-blue)' }}>
-            {language === 'en' ? 'Register IPB Civitas' : 'Daftar Akun Civitas IPB'}
+            {isCivitas
+              ? language === 'en'
+                ? 'Register IPB Civitas'
+                : 'Daftar Akun Civitas IPB'
+              : language === 'en'
+                ? 'Register General Account'
+                : 'Daftar Akun Umum'}
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.4' }}>
-            {language === 'en'
-              ? 'Exclusively for IPB University students and staff to manage lost and found items.'
-              : 'Khusus untuk mahasiswa dan staf IPB University untuk mengelola penemuan barang.'}
+            {isCivitas
+              ? language === 'en'
+                ? 'Exclusively for IPB University students and staff to manage lost and found items.'
+                : 'Khusus untuk mahasiswa dan staf IPB University untuk mengelola penemuan barang.'
+              : language === 'en'
+                ? 'General users can also register, as long as they provide an identity number or official identity document.'
+                : 'Pengguna umum juga bisa mendaftar, asalkan menyertakan nomor identitas atau dokumen identitas resmi.'}
           </p>
         </div>
 
@@ -181,7 +196,7 @@ const SignUp = () => {
             <input
               type="email"
               className="form-input"
-              placeholder="mail@apps.ipb.ac.id"
+              placeholder="email@domain.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -203,12 +218,12 @@ const SignUp = () => {
 
           {/* Identity (either number OR upload) */}
           <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <label style={{ fontSize: '14px' }}>Identity (fill one)</label>
+            <label style={{ fontSize: '14px' }}>{identityFieldLabel}</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <input
                 type="text"
                 className="form-input"
-                placeholder="NIM / NIP / ID Number"
+                placeholder={identityFieldPlaceholder}
                 value={identityNumber}
                 onChange={(e) => setIdentityNumber(e.target.value)}
                 style={{ flex: 1 }}
@@ -224,7 +239,7 @@ const SignUp = () => {
                 style={{ flex: 1 }}
               />
             </div>
-            <small style={{ color: 'var(--text-secondary)' }}>Provide either identity number or upload an identity document.</small>
+            <small style={{ color: 'var(--text-secondary)' }}>{identityFieldHint}</small>
           </div>
 
 
