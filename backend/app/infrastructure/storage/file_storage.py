@@ -62,6 +62,16 @@ def _extract_s3_object_key(stored_path: str) -> str:
 	return stored_path.lstrip("/")
 
 
+def get_storage_reference(stored_path: str | None) -> str | None:
+	if not stored_path:
+		return None
+
+	if stored_path.startswith("http://") or stored_path.startswith("https://"):
+		return _extract_s3_object_key(stored_path)
+
+	return stored_path
+
+
 def get_accessible_file_url(stored_path: str | None) -> str | None:
 	if not stored_path:
 		return None
@@ -109,7 +119,8 @@ def save_upload_file(upload_file: UploadFile, *, subdir: str, default_extension:
 	object_key = f"{subdir}/{file_name}"
 
 	if settings.STORAGE_PROVIDER.lower() == "s3":
-		return _save_to_s3(upload_file, object_key)
+		_save_to_s3(upload_file, object_key)
+		return object_key
 
 	storage_dir = Path("storage") / subdir
 	return _save_locally(upload_file, storage_dir, file_name, subdir)

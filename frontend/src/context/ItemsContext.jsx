@@ -37,7 +37,7 @@ export const ItemsProvider = ({ children }) => {
         image: resolveAssetUrl(item.image),
         date: item.created_at ? item.created_at.split("T")[0] : "2024-05-18",
         type: item.report_type === "lost" ? "lost" : "found",
-        status: formatItemStatus(item.status), 
+        status: formatItemStatus(item.status),
         reporterId: item.reporter_id,
         reporter: `User #${item.reporter_id}`,
         reporterEmail: `user${item.reporter_id}@apps.ipb.ac.id`,
