@@ -87,7 +87,7 @@ const SignUp = () => {
       identityDocumentFile || null,
     );
     if (success && success.success) {
-      navigate("/home");
+      navigate("/");
     } else {
       setErrorMsg(
         success?.error ||
