@@ -23,22 +23,17 @@ const SignUp = () => {
   const { language, toggleLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const emailLower = email.trim().toLowerCase();
-  const isCivitas = emailLower.endsWith('@apps.ipb.ac.id') || emailLower.endsWith('@ipb.ac.id');
   const identityFieldLabel = language === 'en'
-    ? isCivitas
-      ? 'Identity (NIM / NIP / KTM / document)'
-      : 'Identity (NIK / SIM / passport / document)'
-    : isCivitas
-      ? 'Identitas (NIM / NIP / KTM / dokumen)'
-      : 'Identitas (NIK / SIM / paspor / dokumen)';
-  const identityFieldPlaceholder = isCivitas ? 'NIM / NIP / KTM / ID Number' : 'NIK / SIM / Passport Number';
+    ? 
+      'Identity (NIM/ NIK / SIM / passport / document)'
+    : 
+      'Identitas (NIM/ NIK / SIM / paspor / dokumen)';
+  const identityFieldPlaceholder =  'NIM / NIP / KTM / ID Number';
   const identityFieldHint = language === 'en'
-    ? isCivitas
-      ? 'IPB civitas can use NIM, NIP, KTM, or upload an identity document.'
-      : 'General users can use NIK, SIM, passport, or upload an official identity document.'
-    : isCivitas
-      ? 'Civitas IPB bisa pakai NIM, NIP, KTM, atau unggah dokumen identitas.'
-      : 'Pengguna umum bisa pakai NIK, SIM, paspor, atau unggah dokumen identitas resmi.';
+    ? 
+      'General users can use NIK, SIM, passport, or upload an official identity document.'
+    : 
+      'Pengguna umum bisa pakai NIK, SIM, paspor, atau unggah dokumen identitas resmi.';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,12 +54,9 @@ const SignUp = () => {
     if (!idNum && !idDoc) {
       setErrorMsg(
         language === 'en'
-          ? isCivitas
-            ? 'Please provide either NIM/NIP/KTM or upload an identity document.'
-            : 'Please provide either your identity number or upload an official identity document.'
-          : isCivitas
-            ? 'Silakan isi NIM/NIP/KTM atau unggah dokumen identitas.'
-            : 'Silakan isi nomor identitas atau unggah dokumen identitas resmi.'
+          ? 
+            'Please provide either your identity number or upload an official identity document.'
+          : 'Silakan isi nomor identitas atau unggah dokumen identitas resmi.'
       );
       return;
     }
@@ -136,17 +128,14 @@ const SignUp = () => {
         overflowY: 'auto',
         minHeight: 0
       }}>
-        <div style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: '20px', marginTop: '200px' }}>
           <h1 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '6px', color: 'var(--ipb-blue)' }}>
-            {isCivitas
-              ? language === 'en'
-                ? 'Register IPB Civitas'
-                : 'Daftar Akun Civitas IPB'
-              : language === 'en'
-                ? 'Register General Account'
-                : 'Daftar Akun Umum'}
+               {language === 'en'
+                ? 'Register IPB FoundIt'
+                : 'Daftar Akun FoundIt IPB'
+               }
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.4' }}>
+          {/* <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.4' }}>
             {isCivitas
               ? language === 'en'
                 ? 'Exclusively for IPB University students and staff to manage lost and found items.'
@@ -154,7 +143,7 @@ const SignUp = () => {
               : language === 'en'
                 ? 'General users can also register, as long as they provide an identity number or official identity document.'
                 : 'Pengguna umum juga bisa mendaftar, asalkan menyertakan nomor identitas atau dokumen identitas resmi.'}
-          </p>
+          </p> */}
         </div>
 
         {/* Error Warning Block */}
