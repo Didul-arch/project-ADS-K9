@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.schemas.claim_schema import ReviewClaimRequest
 from app.domains.claim.entity import ClaimEntity, ClaimStatus, RequestType
 from app.domains.item.entity import ItemStatus
+from app.domains.item.service import ItemService
 from app.domains.claim.service import ClaimService
 from app.infrastructure.db.session import get_db
 from app.infrastructure.repositories.activity_history_repository import ActivityHistoryRepository
@@ -250,46 +251,40 @@ async def mark_item_returned_from_history(
 
 @router.patch("/claims/{claim_id}/mark-collected")
 async def mark_claim_collected(
-	claim_id: int,
-	db: AsyncSession = Depends(get_db),
-	current_user: UserEntity = Depends(get_current_user),
+    claim_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserEntity = Depends(get_current_user),
 ):
-	# Verify claim exists
-	claim_repo = ClaimRepository(db)
-	claim_service = ClaimService(claim_repo)
-	claim = await claim_service.get_by_id(claim_id)
-	if not claim:
-		raise HTTPException(status_code=404, detail="Claim tidak ditemukan")
+    # Verify claim exists
+    claim_service = ClaimService(ClaimRepository(db))
+    claim = await claim_service.get_by_id(claim_id)
+    if not claim:
+        raise HTTPException(status_code=404, detail="Claim tidak ditemukan")
 
-	# Only the claimer can mark collected
-	if current_user.id != claim.claimer_id:
-		raise HTTPException(status_code=403, detail="Hanya claimer yang dapat menandai item sebagai dikumpulkan")
+    # Only the claimer can mark collected
+    if current_user.id != claim.claimer_id:
+        raise HTTPException(status_code=403, detail="Hanya claimer yang dapat menandai item sebagai dikumpulkan")
 
-	# Claim must be approved
-	if claim.status != ClaimStatus.APPROVED:
-		raise HTTPException(status_code=400, detail="Claim belum disetujui")
+    # Claim must be approved
+    if claim.status != ClaimStatus.APPROVED:
+        raise HTTPException(status_code=400, detail="Claim belum disetujui")
 
-	# Load item and update status
-	item_result = await db.execute(select(ItemModel).where(ItemModel.id == claim.item_id))
-	item = item_result.scalars().first()
-	if not item:
-		raise HTTPException(status_code=404, detail="Item tidak ditemukan")
+    # Update item status lewat service — tidak langsung ke DB
+    item_service = ItemService(ItemRepository(db))
+    try:
+        await item_service.update_status(claim.item_id, ItemStatus.RETURNED)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
 
-	if item.status != ItemStatus.RETURNED:
-		item.status = ItemStatus.RETURNED
-		await db.commit()
-		await db.refresh(item)
+    # Update activity history
+    history_repo = ActivityHistoryRepository(db)
+    updated_history = await history_repo.mark_user_item_returned(current_user.id, claim.item_id)
 
-	# Update activity history for this user/item
-	history_repo = ActivityHistoryRepository(db)
-	updated_history = await history_repo.mark_user_item_returned(current_user.id, item.id)
+    # Notify — tidak block kalau gagal
+    try:
+        notification_service = NotificationService(NotificationRepository(db))
+        await notification_service.create_for_claim_review(claim)
+    except Exception:
+        pass
 
-	# Optionally notify the reporter that item has been returned (reuse NotificationService)
-	try:
-		notification_service = NotificationService(NotificationRepository(db))
-		await notification_service.create_for_claim_review(claim)
-	except Exception:
-		# don't block on notification failures
-		pass
-
-	return {"status": "success", "data": updated_history}
+    return {"status": "success", "data": updated_history}

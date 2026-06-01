@@ -90,3 +90,38 @@ class ItemRepository:
         result = await self.db.execute(query)
         db_items = result.scalars().all()
         return [self._to_entity(item) for item in db_items]
+
+    # 5. Update item (general — untuk update field apapun)
+    async def update(self, item: ItemEntity) -> ItemEntity:
+        result = await self.db.execute(select(ItemModel).where(ItemModel.id == item.id))
+        db_item = result.scalars().first()
+        
+        if not db_item:
+            raise ValueError("Item tidak ditemukan.")
+        
+        db_item.title = item.title
+        db_item.description = item.description
+        db_item.location = item.location
+        db_item.category = item.category
+        db_item.image = item.image
+        db_item.latitude = item.latitude
+        db_item.longitude = item.longitude
+        db_item.report_type = item.report_type
+        db_item.status = item.status
+        
+        await self.db.commit()
+        await self.db.refresh(db_item)
+        return self._to_entity(db_item)
+
+    # 6. Update status item saja (lebih spesifik, untuk mark-collected)
+    async def update_status(self, item_id: int, new_status) -> ItemEntity:
+        result = await self.db.execute(select(ItemModel).where(ItemModel.id == item_id))
+        db_item = result.scalars().first()
+        
+        if not db_item:
+            raise ValueError("Item tidak ditemukan.")
+        
+        db_item.status = new_status
+        await self.db.commit()
+        await self.db.refresh(db_item)
+        return self._to_entity(db_item)

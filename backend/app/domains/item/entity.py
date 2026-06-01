@@ -10,7 +10,6 @@ class ReportType(str, Enum):
     LOST = "lost"
     FOUND = "found"
 
-
 @dataclass
 class ItemEntity:
     id: int | None
@@ -30,3 +29,8 @@ class ItemEntity:
         if self.status != ItemStatus.NOT_RETURNED:
             raise ValueError("Item sudah returned atau statusnya tidak valid.")
         self.status = ItemStatus.RETURNED
+
+    def update_status(self, new_status: ItemStatus):
+        if new_status == ItemStatus.RETURNED and self.status != ItemStatus.NOT_RETURNED:
+            raise ValueError("Item sudah returned atau statusnya tidak valid.")
+        self.status = new_status
