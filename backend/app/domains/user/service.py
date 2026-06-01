@@ -25,7 +25,7 @@ class UserService:
             raise DuplicateUserError("Email sudah terdaftar.")
 
         email_lower = user.email.strip().lower()
-        if email_lower.endswith(("@apps.ipb.ac.id", "@ipb.ac.id")):
+        if user.is_ipb_student(email_lower):
             user.role = Role.CIVITAS
         else:
             user.role = Role.UMUM
