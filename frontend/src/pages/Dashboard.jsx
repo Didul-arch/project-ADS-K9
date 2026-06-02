@@ -18,6 +18,7 @@ import { useLanguage } from "../context/LanguageContext";
 import { useItems } from "../context/ItemsContext";
 import { apiJson } from "../lib/api";
 import { resolveAssetUrl } from "../lib/assetUrl";
+import ClaimReviewModal from "../components/ClaimReviewModal";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -29,6 +30,9 @@ const Dashboard = () => {
   const [reviewingId, setReviewingId] = useState(null);
   const [selectedStatuses, setSelectedStatuses] = useState(["pending"]);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const [selectedClaim, setSelectedClaim] = useState(null);
+  const [selectedClaimer, setSelectedClaimer] = useState(null);
+  const [loadingClaimer, setLoadingClaimer] = useState(false);
 
   const isAdmin = user?.role === "Admin";
 
@@ -90,6 +94,10 @@ const Dashboard = () => {
         token,
       });
       if (res.ok) {
+        if (selectedClaim?.id === claimId) {
+          setSelectedClaim(null);
+          setSelectedClaimer(null);
+        }
         await fetchClaims();
       } else {
         console.error("Failed to review claim:", res);
@@ -98,6 +106,25 @@ const Dashboard = () => {
       console.error("Failed to review claim:", error);
     } finally {
       setReviewingId(null);
+    }
+  };
+
+  const openClaimReviewModal = async (claim) => {
+    setSelectedClaim(claim);
+    setSelectedClaimer(null);
+    setLoadingClaimer(true);
+
+    try {
+      const res = await apiJson(`/admin/users/${claim.claimer_id}`, { token });
+      if (res.ok && res.data) {
+        setSelectedClaimer(res.data);
+      } else {
+        console.error("Failed to fetch claimer info:", res);
+      }
+    } catch (error) {
+      console.error("Failed to fetch claimer info:", error);
+    } finally {
+      setLoadingClaimer(false);
     }
   };
 
@@ -415,30 +442,13 @@ const Dashboard = () => {
                       )}
 
                       {claim.status === "pending" && (
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "12px",
-                            flexWrap: "wrap",
-                          }}
-                        >
+                        <div style={{ marginTop: "16px" }}>
                           <button
                             className="btn btn-primary"
-                            disabled={reviewingId === claim.id}
-                            onClick={() => reviewClaim(claim.id, "approved")}
+                            style={{ width: "100%", justifyContent: "center" }}
+                            onClick={() => openClaimReviewModal(claim)}
                           >
-                            Approve
-                          </button>
-                          <button
-                            className="btn"
-                            style={{
-                              background: "#F4F7FE",
-                              color: "var(--text-secondary)",
-                            }}
-                            disabled={reviewingId === claim.id}
-                            onClick={() => reviewClaim(claim.id, "rejected")}
-                          >
-                            Reject
+                            Review Detail
                           </button>
                         </div>
                       )}
@@ -559,6 +569,16 @@ const Dashboard = () => {
           ))}
         </div>
       </div>
+
+      <ClaimReviewModal
+        claim={selectedClaim}
+        item={selectedClaim ? itemById.get(selectedClaim.item_id) : null}
+        claimer={selectedClaimer}
+        loadingClaimer={loadingClaimer}
+        onClose={() => setSelectedClaim(null)}
+        onReview={reviewClaim}
+        reviewingId={reviewingId}
+      />
     </motion.div>
   );
 };

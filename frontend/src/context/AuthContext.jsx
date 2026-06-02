@@ -17,6 +17,17 @@ export const AuthProvider = ({ children }) => {
       setToken(savedToken);
     }
     setLoading(false);
+
+    // Automatically log out when API returns 401
+    const handleUnauthorized = () => {
+      console.warn("Session expired or unauthorized. Logging out...");
+      logout();
+    };
+
+    window.addEventListener("auth-unauthorized", handleUnauthorized);
+    return () => {
+      window.removeEventListener("auth-unauthorized", handleUnauthorized);
+    };
   }, []);
 
   const login = async (email, password) => {

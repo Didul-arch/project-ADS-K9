@@ -22,6 +22,6 @@ class NotificationEntity:
 
     def mark_as_read(self):
         if self.is_read:
-            return  # sudah dibaca, tidak perlu error
+            return  
         self.is_read = True
         self.read_at = datetime.now()

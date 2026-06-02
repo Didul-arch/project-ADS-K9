@@ -1,7 +1,7 @@
 export function resolveAssetUrl(assetPath) {
   if (!assetPath) return "";
 
-  const normalizedAssetPath = assetPath
+  let normalizedAssetPath = assetPath
     .trim()
     .replace(/^(https?)\/\//i, "$1://");
 
@@ -19,6 +19,16 @@ export function resolveAssetUrl(assetPath) {
     /\/$/,
     "",
   );
+
+  // Ensure known upload directories hit the /storage endpoint
+  if (
+    !normalizedAssetPath.startsWith("/") &&
+    (normalizedAssetPath.startsWith("identity-documents/") ||
+      normalizedAssetPath.startsWith("items/") ||
+      normalizedAssetPath.startsWith("claims/"))
+  ) {
+    normalizedAssetPath = `/storage/${normalizedAssetPath}`;
+  }
 
   if (normalizedAssetPath.startsWith("/storage/")) {
     return apiBase ? `${apiBase}${normalizedAssetPath}` : normalizedAssetPath;

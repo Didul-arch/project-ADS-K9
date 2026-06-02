@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import { motion } from "framer-motion";
-import { User, Mail, Lock, Eye, EyeOff, Languages, Phone } from "lucide-react";
+import { User, Mail, Lock, Eye, EyeOff, Languages, Phone, Loader2 } from "lucide-react";
 import ipbLogoWhite from "../assets/ipb-logo-white.png";
 
 const SignUp = () => {
@@ -18,6 +18,7 @@ const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const { signUp } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
@@ -65,6 +66,7 @@ const SignUp = () => {
       return;
     }
 
+    setSubmitting(true);
     const success = await signUp(
       name,
       email,
@@ -81,6 +83,7 @@ const SignUp = () => {
           (language === "en" ? "Registration failed." : "Pendaftaran gagal."),
       );
     }
+    setSubmitting(false);
   };
 
   return (
@@ -334,14 +337,32 @@ const SignUp = () => {
           <button
             type="submit"
             className="btn btn-primary"
+            disabled={submitting}
             style={{
               width: "100%",
               padding: "16px",
               fontSize: "16px",
               marginTop: "12px",
+              opacity: submitting ? 0.7 : 1,
+              cursor: submitting ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
             }}
           >
-            {t("createAccount")}
+            {submitting && (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                style={{ display: "inline-flex" }}
+              >
+                <Loader2 size={18} />
+              </motion.div>
+            )}
+            {submitting
+              ? (language === "en" ? "Creating..." : "Mendaftar...")
+              : t("createAccount")}
           </button>
         </form>
 

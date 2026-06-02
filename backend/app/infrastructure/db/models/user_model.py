@@ -17,7 +17,7 @@ class UserModel(Base):
     role: Mapped[Role] = mapped_column(Enum(Role), default=Role.UMUM)
 
     __mapper_args__ = {
-        "polymorphic_on": "role",
+        "polymorphic_on": role,
         "polymorphic_identity": Role.UMUM,
     }
 
@@ -26,3 +26,9 @@ class AdminModel(UserModel):
     __mapper_args__ = {
         "polymorphic_identity": Role.ADMIN,
     }
+
+
+class CivitasModel(UserModel):
+    __mapper_args__ = {
+        "polymorphic_identity": Role.CIVITAS,
+    }
