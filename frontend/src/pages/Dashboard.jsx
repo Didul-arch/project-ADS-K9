@@ -29,8 +29,6 @@ const Dashboard = () => {
   const [reviewingId, setReviewingId] = useState(null);
   const [selectedStatuses, setSelectedStatuses] = useState([
     "pending",
-    "approved",
-    "rejected",
   ]);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
 

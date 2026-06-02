@@ -135,10 +135,10 @@ const SignUp = () => {
       }}>
         <div style={{ marginBottom: '20px', marginTop: '200px' }}>
           <h1 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '6px', color: 'var(--ipb-blue)' }}>
-               {language === 'en'
+              {language === 'en'
                 ? 'Register IPB FoundIt'
                 : 'Daftar Akun FoundIt IPB'
-               }
+              }
           </h1>
           {/* <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.4' }}>
             {isCivitas
