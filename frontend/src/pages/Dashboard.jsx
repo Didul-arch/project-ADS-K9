@@ -366,6 +366,9 @@ const Dashboard = () => {
                         borderRadius: "18px",
                         padding: "18px",
                         background: "#FDFEFF",
+                        display: "flex",
+                        flexDirection: "column",
+                        minHeight: "450px",
                       }}
                     >
                       <div
@@ -412,6 +415,7 @@ const Dashboard = () => {
                         style={{
                           margin: "0 0 12px 0",
                           color: "var(--text-primary)",
+                          flex: "0 0 auto",
                         }}
                       >
                         {claim.proof_text}
@@ -423,8 +427,10 @@ const Dashboard = () => {
                           target="_blank"
                           rel="noreferrer"
                           style={{
-                            display: "inline-block",
+                            display: "block",
                             marginBottom: "12px",
+                            flex: "1 1 auto",
+                            minHeight: "200px",
                           }}
                         >
                           <img
@@ -432,7 +438,7 @@ const Dashboard = () => {
                             alt="claim proof"
                             style={{
                               width: "100%",
-                              maxWidth: "280px",
+                              height: "200px",
                               borderRadius: "14px",
                               border: "1px solid #E0E5F2",
                               objectFit: "cover",

@@ -285,7 +285,7 @@ const UserManagement = () => {
               <option value="all">All Roles</option>
               <option value="admin">Admin</option>
               <option value="civitas">Civitas</option>
-              <option value="umum">User</option>
+              <option value="umum">Umum</option>
             </select>
             <select
               value={statusFilter}
