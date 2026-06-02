@@ -27,9 +27,7 @@ const Dashboard = () => {
   const [claims, setClaims] = useState([]);
   const [claimsLoading, setClaimsLoading] = useState(false);
   const [reviewingId, setReviewingId] = useState(null);
-  const [selectedStatuses, setSelectedStatuses] = useState([
-    "pending",
-  ]);
+  const [selectedStatuses, setSelectedStatuses] = useState(["pending"]);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
 
   const isAdmin = user?.role === "Admin";
