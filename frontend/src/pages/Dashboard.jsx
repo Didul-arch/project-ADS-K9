@@ -28,11 +28,7 @@ const Dashboard = () => {
   const [claims, setClaims] = useState([]);
   const [claimsLoading, setClaimsLoading] = useState(false);
   const [reviewingId, setReviewingId] = useState(null);
-  const [selectedStatuses, setSelectedStatuses] = useState([
-    "pending",
-    "approved",
-    "rejected",
-  ]);
+  const [selectedStatuses, setSelectedStatuses] = useState(["pending"]);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [selectedClaim, setSelectedClaim] = useState(null);
   const [selectedClaimer, setSelectedClaimer] = useState(null);

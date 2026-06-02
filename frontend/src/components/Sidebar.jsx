@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, Search, PlusCircle, Layout, Clock, LogOut, ChevronLeft, ChevronRight, User } from 'lucide-react';
+import { Home, Search, PlusCircle, Layout, Clock, LogOut, ChevronLeft, ChevronRight, User, Users } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -45,8 +45,8 @@ const Sidebar = () => {
     { icon: <Layout size={20} />, label: 'Admin Dashboard', path: '/dashboard' },
     { icon: <Search size={20} />, label: 'All Items', path: '/browse' },
     { icon: <PlusCircle size={20} />, label: 'Report', path: '/report' },
-    { icon: <Clock size={20} />, label: 'System Logs', path: '/history' },
-    { icon: <Home size={20} />, label: 'User Management', path: '/users' },
+    { icon: <Clock size={20} />, label: 'Activity History', path: '/history' },
+    { icon: <Users size={20} />, label: 'User Management', path: '/users' },
     { icon: <User size={20} />, label: 'My Profile', path: '/users/me' },
   ];
 
