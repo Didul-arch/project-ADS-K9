@@ -20,8 +20,8 @@ const Browse = () => {
     const matchesSearch =
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const isNotClaimed = item.status?.toLowerCase() !== "claimed";
-    return matchesType && matchesCategory && matchesSearch && isNotClaimed;
+    const isNotReturned = item.status?.toLowerCase() === "not returned";
+    return matchesType && matchesCategory && matchesSearch && isNotReturned;
   });
 
   return (
